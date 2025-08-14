@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: "LLM Guard - Network Security Firewall",
     description: "AI-powered network security and firewall management system",
+    icons: {
+        icon: "/firewall.ico",
+    },
 };
 
 export default function RootLayout({
