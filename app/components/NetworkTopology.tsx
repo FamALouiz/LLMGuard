@@ -286,7 +286,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                 {selectedNode && (
                     <Panel
                         position="top-right"
-                        className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 m-4 max-w-xs"
+                        className="bg-white rounded-lg shadow-lg border border-gray-200 px-6 py-4 my-4 max-w-xs min-w-56"
                     >
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -310,7 +310,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                                     <span className="font-medium text-gray-600">
                                         Name:
                                     </span>
-                                    <p className="text-gray-800">
+                                    <p className="px-1 inline-block text-gray-800">
                                         {selectedNode.name}
                                     </p>
                                 </div>
@@ -318,7 +318,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                                     <span className="font-medium text-gray-600">
                                         Type:
                                     </span>
-                                    <p className="text-gray-800 capitalize">
+                                    <p className="px-1 inline-block text-gray-800 capitalize">
                                         {selectedNode.type}
                                     </p>
                                 </div>
@@ -327,7 +327,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                                         Status:
                                     </span>
                                     <p
-                                        className={`capitalize ${
+                                        className={`px-1 inline-block capitalize ${
                                             selectedNode.status === "active"
                                                 ? "text-green-600"
                                                 : selectedNode.status ===
