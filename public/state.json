@@ -1,0 +1,257 @@
+{
+    "network": {
+        "name": "Corporate Network",
+        "id": "net-001",
+        "nodes": [
+            {
+                "id": "fw-001",
+                "type": "firewall",
+                "name": "Main Firewall",
+                "status": "active",
+                "position": { "x": 400, "y": 200 },
+                "config": {
+                    "rules": 147,
+                    "threats_blocked": 23,
+                    "traffic_volume": "2.3 GB/s"
+                }
+            },
+            {
+                "id": "srv-001",
+                "type": "server",
+                "name": "Web Server",
+                "status": "warning",
+                "position": { "x": 200, "y": 100 },
+                "config": {
+                    "cpu_usage": "45%",
+                    "memory_usage": "67%",
+                    "connections": 234
+                }
+            },
+            {
+                "id": "srv-002",
+                "type": "server",
+                "name": "Database Server",
+                "status": "active",
+                "position": { "x": 200, "y": 300 },
+                "config": {
+                    "cpu_usage": "78%",
+                    "memory_usage": "82%",
+                    "connections": 45
+                }
+            },
+            {
+                "id": "rt-001",
+                "type": "router",
+                "name": "Core Router",
+                "status": "active",
+                "position": { "x": 600, "y": 200 },
+                "config": {
+                    "routing_table_size": 1247,
+                    "packet_loss": "0.02%",
+                    "throughput": "1.8 GB/s"
+                }
+            },
+            {
+                "id": "sw-001",
+                "type": "switch",
+                "name": "Distribution Switch",
+                "status": "active",
+                "position": { "x": 800, "y": 150 },
+                "config": {
+                    "port_utilization": "34%",
+                    "vlan_count": 12,
+                    "spanning_tree_state": "forwarding"
+                }
+            },
+            {
+                "id": "sw-002",
+                "type": "switch",
+                "name": "Access Switch",
+                "status": "active",
+                "position": { "x": 800, "y": 250 },
+                "config": {
+                    "port_utilization": "67%",
+                    "vlan_count": 8,
+                    "spanning_tree_state": "forwarding"
+                }
+            },
+            {
+                "id": "usr-001",
+                "type": "user",
+                "name": "Admin Workstation",
+                "status": "active",
+                "position": { "x": 1000, "y": 100 },
+                "config": {
+                    "logged_in": true,
+                    "last_activity": "2 minutes ago",
+                    "security_level": "high"
+                }
+            },
+            {
+                "id": "usr-002",
+                "type": "user",
+                "name": "Developer Workstation",
+                "status": "active",
+                "position": { "x": 1000, "y": 200 },
+                "config": {
+                    "logged_in": true,
+                    "last_activity": "5 minutes ago",
+                    "security_level": "medium"
+                }
+            },
+            {
+                "id": "usr-003",
+                "type": "user",
+                "name": "Guest Device",
+                "status": "error",
+                "position": { "x": 1000, "y": 300 },
+                "config": {
+                    "logged_in": false,
+                    "last_activity": "1 hour ago",
+                    "security_level": "low"
+                }
+            },
+            {
+                "id": "ext-001",
+                "type": "external",
+                "name": "Internet Gateway",
+                "status": "warning",
+                "position": { "x": 50, "y": 200 },
+                "config": {
+                    "bandwidth": "1 Gbps",
+                    "latency": "15ms",
+                    "uptime": "99.9%"
+                }
+            }
+        ],
+        "connections": [
+            {
+                "id": "conn-001",
+                "source": "ext-001",
+                "target": "fw-001",
+                "type": "wan",
+                "status": "active",
+                "bandwidth": "500 Mbps",
+                "latency": "12ms"
+            },
+            {
+                "id": "conn-002",
+                "source": "fw-001",
+                "target": "srv-001",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "1 Gbps",
+                "latency": "1ms"
+            },
+            {
+                "id": "conn-003",
+                "source": "fw-001",
+                "target": "srv-002",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "1 Gbps",
+                "latency": "1ms"
+            },
+            {
+                "id": "conn-004",
+                "source": "fw-001",
+                "target": "rt-001",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "10 Gbps",
+                "latency": "0.5ms"
+            },
+            {
+                "id": "conn-005",
+                "source": "rt-001",
+                "target": "sw-001",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "10 Gbps",
+                "latency": "0.3ms"
+            },
+            {
+                "id": "conn-006",
+                "source": "rt-001",
+                "target": "sw-002",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "10 Gbps",
+                "latency": "0.3ms"
+            },
+            {
+                "id": "conn-007",
+                "source": "sw-001",
+                "target": "usr-001",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "1 Gbps",
+                "latency": "2ms"
+            },
+            {
+                "id": "conn-008",
+                "source": "sw-002",
+                "target": "usr-002",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "1 Gbps",
+                "latency": "2ms"
+            },
+            {
+                "id": "conn-009",
+                "source": "sw-002",
+                "target": "usr-003",
+                "type": "lan",
+                "status": "warning",
+                "bandwidth": "100 Mbps",
+                "latency": "5ms"
+            }
+        ],
+        "traffic_flows": [
+            {
+                "id": "flow-001",
+                "source": "ext-001",
+                "target": "srv-001",
+                "type": "http",
+                "volume": "120 MB/s",
+                "status": "normal"
+            },
+            {
+                "id": "flow-002",
+                "source": "usr-002",
+                "target": "srv-002",
+                "type": "database",
+                "volume": "45 MB/s",
+                "status": "normal"
+            },
+            {
+                "id": "flow-003",
+                "source": "usr-003",
+                "target": "ext-001",
+                "type": "suspicious",
+                "volume": "200 KB/s",
+                "status": "blocked"
+            }
+        ],
+        "security_events": [
+            {
+                "id": "event-001",
+                "timestamp": "2025-08-14T10:30:00Z",
+                "type": "intrusion_attempt",
+                "severity": "high",
+                "source": "192.168.1.100",
+                "target": "srv-001",
+                "description": "Multiple failed authentication attempts detected"
+            },
+            {
+                "id": "event-002",
+                "timestamp": "2025-08-14T10:25:00Z",
+                "type": "policy_violation",
+                "severity": "medium",
+                "source": "usr-003",
+                "target": "ext-001",
+                "description": "Unauthorized outbound connection attempt"
+            }
+        ]
+    }
+}
