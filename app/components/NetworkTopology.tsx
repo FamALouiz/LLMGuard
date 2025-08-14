@@ -355,7 +355,11 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                                                     {key.replace(/_/g, " ")}:
                                                 </span>
                                                 <span className="text-gray-700">
-                                                    {value as string}
+                                                    {typeof value === "boolean"
+                                                        ? value
+                                                            ? "Yes"
+                                                            : "No"
+                                                        : (value as string)}
                                                 </span>
                                             </div>
                                         ))}
