@@ -1,20 +1,9 @@
 "use client";
 
-import React from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
-import {
-    Shield,
-    Server,
-    Router,
-    Network,
-    Monitor,
-    Globe,
-    AlertTriangle,
-    CheckCircle,
-    XCircle,
-    Activity,
-} from "lucide-react";
+import { Handle, NodeProps, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
+import { Globe, Monitor, Network, Router, Server, Shield } from "lucide-react";
+import React from "react";
 
 interface NetworkNodeData {
     id: string;
@@ -58,25 +47,9 @@ const getStatusColor = (status: string) => {
     }
 };
 
-const getStatusIcon = (status: string) => {
-    switch (status) {
-        case "active":
-            return CheckCircle;
-        case "warning":
-            return AlertTriangle;
-        case "error":
-            return XCircle;
-        case "inactive":
-            return XCircle;
-        default:
-            return Activity;
-    }
-};
-
 export const NetworkNode: React.FC<NodeProps> = ({ data, selected }) => {
     const nodeData = data as any;
     const Icon = getNodeIcon(nodeData.type);
-    const StatusIcon = getStatusIcon(nodeData.status);
     const statusColor = getStatusColor(nodeData.status);
 
     return (
@@ -110,11 +83,6 @@ export const NetworkNode: React.FC<NodeProps> = ({ data, selected }) => {
                 position={Position.Bottom}
                 className="w-3 h-3 bg-blue-500 border-2 border-white"
             />
-
-            {/* Status indicator */}
-            <div className="absolute -top-3 -right-3">
-                <StatusIcon className="w-5 h-5" />
-            </div>
 
             {/* Node content */}
             <div className="flex items-center gap-3 mb-2">

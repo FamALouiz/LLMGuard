@@ -223,7 +223,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                             <div className="flex items-center gap-2">
                                 <Server className="w-4 h-4 text-gray-600" />
                                 <span className="text-gray-600">Nodes:</span>
-                                <span className="font-medium">
+                                <span className="text-gray-600 font-medium">
                                     {stats.totalNodes}
                                 </span>
                             </div>

@@ -19,7 +19,7 @@
                 "id": "srv-001",
                 "type": "server",
                 "name": "Web Server",
-                "status": "warning",
+                "status": "active",
                 "position": { "x": 200, "y": 100 },
                 "config": {
                     "cpu_usage": "45%",
