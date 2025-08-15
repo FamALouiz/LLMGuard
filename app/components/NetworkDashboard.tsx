@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import { NetworkTopology } from "./NetworkTopology";
-import { ChatInterface } from "./ChatInterface";
 import { motion } from "framer-motion";
 import {
-    Shield,
     Activity,
-    Settings,
+    Bell,
     Maximize2,
     Minimize2,
-    RefreshCw,
-    Bell,
     PlusCircle,
+    RefreshCw,
+    Settings,
+    Shield,
 } from "lucide-react";
+import React, { useState } from "react";
+import { ChatInterface } from "./ChatInterface";
+import { NetworkTopology } from "./NetworkTopology";
 
 interface NetworkDashboardProps {
     className?: string;

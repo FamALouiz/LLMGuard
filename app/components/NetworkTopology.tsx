@@ -1,35 +1,32 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
 import {
-    ReactFlow,
-    Node,
-    Edge,
-    addEdge,
-    useNodesState,
-    useEdgesState,
+    Background,
     Connection,
     ConnectionMode,
-    Background,
     Controls,
+    Edge,
     MiniMap,
+    Node,
     Panel,
+    ReactFlow,
+    addEdge,
+    useEdgesState,
+    useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { NetworkNode } from "./NetworkNode";
-import { ConnectionEdge } from "./ConnectionEdge";
 import { motion } from "framer-motion";
 import {
-    Shield,
     Activity,
     AlertTriangle,
-    Users,
-    Server,
-    Zap,
     Eye,
-    Settings,
-    PlusCircle,
+    Server,
+    Shield,
+    Zap,
 } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { ConnectionEdge } from "./ConnectionEdge";
+import { NetworkNode } from "./NetworkNode";
 
 interface NetworkState {
     network: {
@@ -255,7 +252,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                 {/* Legend */}
                 <Panel
                     position="bottom-left"
-                    className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 m-4"
+                    className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 m-4 text-gray-600"
                 >
                     <h4 className="font-semibold text-gray-800 mb-2">Legend</h4>
                     <div className="space-y-2 text-sm">

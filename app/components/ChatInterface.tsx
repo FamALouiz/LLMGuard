@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Send, Bot, User, Loader2, Trash2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bot, Loader2, Send, Trash2, User } from "lucide-react";
+import React, { useRef, useState } from "react";
 
 interface Message {
     id: string;
