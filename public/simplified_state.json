@@ -8,9 +8,15 @@
                 "type": "firewall",
                 "name": "Demo Firewall",
                 "status": "active",
-                "position": { "x": 200, "y": 200 },
+                "position": {
+                    "x": -526,
+                    "y": 152
+                },
                 "config": {
-                    "rules": ["test", "test"],
+                    "rules": [
+                        "test",
+                        "test"
+                    ],
                     "threats_blocked": 3,
                     "traffic_volume": "150 MB/s"
                 },
@@ -21,7 +27,10 @@
                 "type": "router",
                 "name": "Core Router",
                 "status": "active",
-                "position": { "x": 400, "y": 200 },
+                "position": {
+                    "x": 28,
+                    "y": 162
+                },
                 "config": {
                     "routing_table_size": 10,
                     "packet_loss": "0.01%",
@@ -34,7 +43,10 @@
                 "type": "user",
                 "name": "Host 1",
                 "status": "active",
-                "position": { "x": 600, "y": 100 },
+                "position": {
+                    "x": 560,
+                    "y": -355
+                },
                 "config": {
                     "logged_in": true,
                     "last_activity": "1 minute ago",
@@ -47,7 +59,10 @@
                 "type": "user",
                 "name": "Host 2",
                 "status": "active",
-                "position": { "x": 600, "y": 200 },
+                "position": {
+                    "x": 546,
+                    "y": 120
+                },
                 "config": {
                     "logged_in": true,
                     "last_activity": "3 minutes ago",
@@ -60,7 +75,10 @@
                 "type": "user",
                 "name": "Host 3",
                 "status": "active",
-                "position": { "x": 600, "y": 300 },
+                "position": {
+                    "x": 580,
+                    "y": 424
+                },
                 "config": {
                     "logged_in": false,
                     "last_activity": "10 minutes ago",

@@ -112,17 +112,60 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         };
 
         loadNetworkState();
-
-        const interval = setInterval(() => {
-            loadNetworkState();
-        }, 1000);
-
-        return () => clearInterval(interval);
     }, [setNodes, setEdges]);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
         [setEdges]
+    );
+
+    // Function to update node position in the backend
+    const updateNodePosition = useCallback(
+        async (nodeId: string, position: { x: number; y: number }) => {
+            try {
+                const response = await fetch("/api/update-node-position", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ nodeId, position }),
+                });
+
+                if (!response.ok) {
+                    console.error(
+                        "Failed to update node position:",
+                        await response.text()
+                    );
+                } else {
+                    console.log(
+                        `Node ${nodeId} position updated to (${position.x}, ${position.y})`
+                    );
+                }
+            } catch (error) {
+                console.error("Error updating node position:", error);
+            }
+        },
+        []
+    );
+
+    // Handle node position changes with debouncing
+    const onNodesChangeWithPositionUpdate = useCallback(
+        (changes: any[]) => {
+            onNodesChange(changes);
+
+            // Check for position changes and update backend
+            changes.forEach((change) => {
+                if (
+                    change.type === "position" &&
+                    change.position &&
+                    !change.dragging
+                ) {
+                    // Only update when dragging ends (not during drag)
+                    updateNodePosition(change.id, change.position);
+                }
+            });
+        },
+        [onNodesChange, updateNodePosition]
     );
 
     const onNodeClick = useCallback(
@@ -181,7 +224,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                onNodesChange={onNodesChange}
+                onNodesChange={onNodesChangeWithPositionUpdate}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onNodeClick={onNodeClick}

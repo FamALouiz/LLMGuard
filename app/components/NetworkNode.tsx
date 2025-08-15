@@ -87,7 +87,7 @@ export const NetworkNode: React.FC<NodeProps> = ({ data, selected }) => {
             {/* Node content */}
             <div className="flex items-center gap-3 mb-2">
                 <Icon className="w-6 h-6" />
-                <div>
+                <div className="flex-1">
                     <h3 className="font-semibold text-sm">{nodeData.name}</h3>
                     <p className="text-xs opacity-75 capitalize">
                         {nodeData.type}
