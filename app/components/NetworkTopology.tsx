@@ -112,6 +112,12 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         };
 
         loadNetworkState();
+
+        const interval = setInterval(() => {
+            loadNetworkState();
+        }, 1000);
+
+        return () => clearInterval(interval);
     }, [setNodes, setEdges]);
 
     const onConnect = useCallback(
