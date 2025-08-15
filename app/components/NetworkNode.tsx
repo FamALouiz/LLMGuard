@@ -105,7 +105,15 @@ export const NetworkNode: React.FC<NodeProps> = ({ data, selected }) => {
                                 {key.replace(/_/g, " ")}:
                             </span>
                             <span className="font-medium">
-                                {value as string}
+                                {Array.isArray(value)
+                                    ? `${value.length} item${
+                                          value.length === 1 ? "" : "s"
+                                      }`
+                                    : typeof value === "boolean"
+                                    ? value
+                                        ? "Yes"
+                                        : "No"
+                                    : (value as string)}
                             </span>
                         </div>
                     ))}

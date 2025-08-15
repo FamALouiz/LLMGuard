@@ -66,7 +66,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     useEffect(() => {
         const loadNetworkState = async () => {
             try {
-                const response = await fetch("/state.json");
+                const response = await fetch("/simplified_state.json");
                 const data = await response.json();
                 setNetworkState(data);
 
@@ -352,7 +352,16 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                                                     {key.replace(/_/g, " ")}:
                                                 </span>
                                                 <span className="text-gray-700">
-                                                    {typeof value === "boolean"
+                                                    {Array.isArray(value)
+                                                        ? `${
+                                                              value.length
+                                                          } item${
+                                                              value.length === 1
+                                                                  ? ""
+                                                                  : "s"
+                                                          }`
+                                                        : typeof value ===
+                                                          "boolean"
                                                         ? value
                                                             ? "Yes"
                                                             : "No"
