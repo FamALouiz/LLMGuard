@@ -292,7 +292,7 @@ class NetworkTopologyManager:
                 self.containers[node_data['id']] = container
 
                 # Wait a moment for container to start
-                time.sleep(1)
+                time.sleep(7)
 
                 # Configure services
                 self.configure_container_services(container, node_data)
