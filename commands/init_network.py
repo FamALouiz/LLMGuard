@@ -239,21 +239,41 @@ class NetworkTopologyManager:
                 # Basic firewall configuration
                 commands = node_data['config'].get('rules', [])
                 for cmd in commands:
-                    result = container.exec_run(
-                        cmd, user="root")
-                    if result.exit_code != 0:
-                        log_warn(
-                            f"Warning: Command failed in {node_id}: {cmd} with code {result.exit_code}")
+                    success = False
+                    for attempt in range(3):
+                        result = container.exec_run(cmd, user="root")
+                        if result.exit_code == 0:
+                            success = True
+                            break
+                        else:
+                            log_warn(
+                                f"Attempt {attempt + 1} failed for {node_id}: {cmd} with code {result.exit_code}")
+                            if attempt < 2:
+                                time.sleep(3)
+
+                    if not success:
+                        log_error(
+                            f"Command failed after 3 attempts in {node_id}: {cmd}")
 
             elif node_type == 'router':
                 log_info(f"Configuring routing for {node_id}")
                 commands = node_data['config'].get('rules', [])
                 for cmd in commands:
-                    result = container.exec_run(
-                        cmd, user="root")
-                    if result.exit_code != 0:
-                        log_warn(
-                            f"Warning: Command failed in {node_id}: {cmd} with code {result.exit_code}")
+                    success = False
+                    for attempt in range(3):
+                        result = container.exec_run(cmd, user="root")
+                        if result.exit_code == 0:
+                            success = True
+                            break
+                        else:
+                            log_warn(
+                                f"Attempt {attempt + 1} failed for {node_id}: {cmd} with code {result.exit_code}")
+                            if attempt < 2:
+                                time.sleep(3)
+
+                    if not success:
+                        log_error(
+                            f"Command failed after 3 attempts in {node_id}: {cmd}")
 
             elif node_type == 'server':
                 log_info(f"Server {node_id} is running nginx by default")
