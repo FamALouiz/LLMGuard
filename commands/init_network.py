@@ -324,19 +324,24 @@ class NetworkTopologyManager:
         """Test basic connectivity between containers"""
         log_info("*** Testing connectivity ***")
 
-        if len(self.containers) < 2:
+        if len(self.docker_client.containers.list()) < 2:
             log_warn("Not enough containers for connectivity test")
             return
 
         # Get first two containers
-        container_ids = list(self.containers.keys())
-        container1_id = container_ids[0]
-        container2_id = container_ids[1]
-
-        container1 = self.containers[container1_id]
-        container2 = self.containers[container2_id]
+        container_ids = list(self.docker_client.containers.list())
+        container1 = container_ids[0]
+        container2 = container_ids[1]
 
         try:
+            # Get IP of first container
+            container1_ip = None
+            network_settings = container1.attrs['NetworkSettings']
+            for network_name, network_info in network_settings['Networks'].items():
+                if network_name == self.network_name:
+                    container1_ip = network_info['IPAddress']
+                    break
+
             # Get IP of second container
             container2_ip = None
             network_settings = container2.attrs['NetworkSettings']
@@ -344,10 +349,9 @@ class NetworkTopologyManager:
                 if network_name == self.network_name:
                     container2_ip = network_info['IPAddress']
                     break
-
-            if container2_ip:
+            if container1_ip and container2_ip:
                 log_info(
-                    f"Testing ping from {container1_id} to {container2_id} ({container2_ip})")
+                    f"Testing ping from {container1.id} ({container1_ip}) to {container2.id} ({container2_ip})")
 
                 # Install ping if not available
                 container1.exec_run("apk add --no-cache iputils", detach=False)
