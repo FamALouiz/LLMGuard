@@ -450,39 +450,39 @@ def main():
     network_manager = NetworkTopologyManager(args.state_file)
 
     try:
-        # Handle cleanup mode
+        network_manager.init_docker_client()
+
         if args.cleanup:
-            network_manager.init_docker_client()
             network_manager.cleanup()
+            return
+
+        if args.list:
+            network_manager.list_containers()
+            return
+
+        if args.test:
+            network_manager.test_connectivity()
             return
 
         # Create the topology
         network_manager.create_topology()
 
-        # List containers if requested
-        if args.list:
-            network_manager.list_containers()
-
-        # Run connectivity tests if requested
-        if args.test:
-            network_manager.test_connectivity()
-
         # Keep containers running
-        print("\n" + "="*50)
-        print("Network topology is running!")
-        print("Use the following commands to interact with containers:")
-        print()
+        log_info("="*30)
+        log_info("Network topology is running!")
+        log_info("Use the following commands to interact with containers:")
+        log_info("")
         for container_id in network_manager.containers.keys():
-            print(f"  docker exec -it {container_id} sh")
-        print()
-        print("To clean up: python3 init_network.py --cleanup")
-        print("To test connectivity: python3 init_network.py --test")
-        print("="*50)
+            log_info(f"  docker exec -it {container_id} sh")
+        log_info("")
+        log_info("To clean up: python3 init_network.py --cleanup")
+        log_info("To test connectivity: python3 init_network.py --test")
+        log_info("="*30)
 
     except KeyboardInterrupt:
-        print("\n*** Interrupted by user ***")
+        log_error("\n*** Interrupted by user ***")
     except Exception as e:
-        print(f"*** Error: {e} ***")
+        log_error(f"*** Error: {e} ***")
         network_manager.cleanup()
 
 
