@@ -14,13 +14,16 @@
                 },
                 "config": {
                     "rules": [
-                        "test",
-                        "test"
+                        "iptables -P INPUT ACCEPT",
+                        "iptables -P FORWARD DROP",
+                        "iptables -P OUTPUT ACCEPT",
+                        "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT",
+                        "iptables -A FORWARD -p icmp -j ACCEPT"
                     ],
-                    "threats_blocked": 3,
+                    "threats_blocked": 0,
                     "traffic_volume": "150 MB/s"
                 },
-                "ip": "192.168.1.1"
+                "ip": "172.20.0.10"
             },
             {
                 "id": "rt-001",
@@ -28,15 +31,17 @@
                 "name": "Core Router",
                 "status": "active",
                 "position": {
-                    "x": 28,
-                    "y": 162
+                    "x": 90,
+                    "y": 106
                 },
                 "config": {
-                    "routing_table_size": 10,
-                    "packet_loss": "0.01%",
-                    "throughput": "500 MB/s"
+                    "throughput": "500 MB/s",
+                    "rules": [
+                        "echo 1 > /proc/sys/net/ipv4/ip_forward",
+                        "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+                    ]
                 },
-                "ip": "192.168.1.254"
+                "ip": "172.20.0.11"
             },
             {
                 "id": "host-001",
@@ -44,15 +49,15 @@
                 "name": "Host 1",
                 "status": "active",
                 "position": {
-                    "x": 560,
-                    "y": -355
+                    "x": 628,
+                    "y": -251
                 },
                 "config": {
                     "logged_in": true,
                     "last_activity": "1 minute ago",
                     "security_level": "medium"
                 },
-                "ip": "192.168.1.10"
+                "ip": "172.20.0.12"
             },
             {
                 "id": "host-002",
@@ -60,15 +65,15 @@
                 "name": "Host 2",
                 "status": "active",
                 "position": {
-                    "x": 546,
-                    "y": 120
+                    "x": 706,
+                    "y": 20
                 },
                 "config": {
                     "logged_in": true,
                     "last_activity": "3 minutes ago",
                     "security_level": "medium"
                 },
-                "ip": "192.168.1.20"
+                "ip": "172.20.0.13"
             },
             {
                 "id": "host-003",
@@ -76,15 +81,15 @@
                 "name": "Host 3",
                 "status": "active",
                 "position": {
-                    "x": 580,
-                    "y": 424
+                    "x": 696,
+                    "y": 416
                 },
                 "config": {
                     "logged_in": false,
                     "last_activity": "10 minutes ago",
                     "security_level": "low"
                 },
-                "ip": "192.168.1.30"
+                "ip": "172.20.0.14"
             }
         ],
         "connections": [

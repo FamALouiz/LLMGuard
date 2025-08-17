@@ -10,7 +10,7 @@
                 "status": "active",
                 "position": { "x": 400, "y": 200 },
                 "config": {
-                    "rules": 147,
+                    "rules": [],
                     "threats_blocked": 23,
                     "traffic_volume": "2.3 GB/s"
                 }
