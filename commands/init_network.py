@@ -237,27 +237,20 @@ class NetworkTopologyManager:
             if node_type == 'firewall':
                 log_info(f"Configuring firewall rules for {node_id}")
                 # Basic firewall configuration
-                commands = [
-                    "iptables -P INPUT ACCEPT",
-                    "iptables -P FORWARD DROP",
-                    "iptables -P OUTPUT ACCEPT",
-                    "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT",
-                    "iptables -A FORWARD -p icmp -j ACCEPT"
-                ]
+                commands = node_data['config'].get('rules', [])
                 for cmd in commands:
-                    result = container.exec_run(cmd)
+                    result = container.exec_run(
+                        cmd, user="root")
                     if result.exit_code != 0:
                         log_warn(
                             f"Warning: Command failed in {node_id}: {cmd} with code {result.exit_code}")
 
             elif node_type == 'router':
                 log_info(f"Configuring routing for {node_id}")
-                commands = [
-                    "echo 1 > /proc/sys/net/ipv4/ip_forward",
-                    "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-                ]
+                commands = node_data['config'].get('rules', [])
                 for cmd in commands:
-                    result = container.exec_run(cmd)
+                    result = container.exec_run(
+                        cmd, user="root")
                     if result.exit_code != 0:
                         log_warn(
                             f"Warning: Command failed in {node_id}: {cmd} with code {result.exit_code}")
