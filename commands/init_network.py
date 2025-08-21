@@ -561,6 +561,17 @@ class NetworkTopologyManager:
                 log_error(
                     f"Failed to create container for {node_data['id']}: {e}")
 
+        # Wait a moment for containers to start
+        time.sleep(15)
+
+        # Configure services
+        for container, node_data in zip(self.containers.values(), nodes):
+            self.configure_container_services(container, node_data)
+
+        # Apply connection-based network policies
+        log_info("Applying connection-based network policies...")
+        self.add_connection_rules()
+
         log_info("*** Network topology created successfully ***")
         log_info(f"Network: {self.state['network']['name']}")
         log_info(f"Containers: {len(self.containers)}")
