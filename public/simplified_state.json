@@ -9,21 +9,14 @@
                 "name": "Demo Firewall",
                 "status": "active",
                 "position": {
-                    "x": -526,
-                    "y": 152
+                    "x": -506,
+                    "y": 70
                 },
                 "config": {
-                    "rules": [
-                        "iptables -P INPUT ACCEPT",
-                        "iptables -P FORWARD DROP",
-                        "iptables -P OUTPUT ACCEPT",
-                        "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT",
-                        "iptables -A FORWARD -p icmp -j ACCEPT"
-                    ],
+                    "rules": [],
                     "threats_blocked": 0,
                     "traffic_volume": "150 MB/s"
-                },
-                "ip": "172.20.0.10"
+                }
             },
             {
                 "id": "rt-001",
@@ -31,17 +24,13 @@
                 "name": "Core Router",
                 "status": "active",
                 "position": {
-                    "x": 90,
-                    "y": 106
+                    "x": 106,
+                    "y": 40
                 },
                 "config": {
                     "throughput": "500 MB/s",
-                    "rules": [
-                        "echo 1 > /proc/sys/net/ipv4/ip_forward",
-                        "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-                    ]
-                },
-                "ip": "172.20.0.11"
+                    "rules": []
+                }
             },
             {
                 "id": "host-001",
@@ -49,15 +38,14 @@
                 "name": "Host 1",
                 "status": "active",
                 "position": {
-                    "x": 628,
-                    "y": -251
+                    "x": 542,
+                    "y": -271
                 },
                 "config": {
                     "logged_in": true,
                     "last_activity": "1 minute ago",
                     "security_level": "medium"
-                },
-                "ip": "172.20.0.12"
+                }
             },
             {
                 "id": "host-002",
@@ -65,15 +53,14 @@
                 "name": "Host 2",
                 "status": "active",
                 "position": {
-                    "x": 706,
-                    "y": 20
+                    "x": 520,
+                    "y": 118
                 },
                 "config": {
                     "logged_in": true,
                     "last_activity": "3 minutes ago",
                     "security_level": "medium"
-                },
-                "ip": "172.20.0.13"
+                }
             },
             {
                 "id": "host-003",
@@ -81,15 +68,14 @@
                 "name": "Host 3",
                 "status": "active",
                 "position": {
-                    "x": 696,
+                    "x": 490,
                     "y": 416
                 },
                 "config": {
                     "logged_in": false,
                     "last_activity": "10 minutes ago",
                     "security_level": "low"
-                },
-                "ip": "172.20.0.14"
+                }
             }
         ],
         "connections": [
@@ -115,8 +101,7 @@
                 "id": "conn-003",
                 "source": "rt-001",
                 "target": "host-002",
-                "type": "lan",
-                "status": "active",
+                "type": "active",
                 "bandwidth": "100 Mbps",
                 "latency": "2ms"
             },
