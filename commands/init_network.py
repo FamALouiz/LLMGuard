@@ -29,7 +29,7 @@ from log.logger import log_error, log_info, log_warn
 
 
 class NetworkTopologyManager:
-    """Manages the creation and synchronization of Docker-based network topology"""
+    """Manages Docker-based network topology creation and synchronization"""
 
     def __init__(self, state_file: str = "../public/state.json"):
         self.state_file = state_file
@@ -39,6 +39,14 @@ class NetworkTopologyManager:
         self.state = None
         self.network_name = "llmguard_network"
         self.base_ip = "172.20.0.0/16"
+        self.connections = {}  # Maps connection IDs to connection data
+        self.network_segments = {
+            'external': '172.20.1.0/24',
+            'dmz': '172.20.2.0/24',
+            'internal': '172.20.3.0/24',
+            'management': '172.20.4.0/24'
+        }
+        self.ip_assignments = {}  # Maps node IDs to assigned IPs
 
     def load_state(self) -> Dict[str, Any]:
         """Load network state from JSON file"""
@@ -47,6 +55,12 @@ class NetworkTopologyManager:
                 self.state = json.load(f)
                 log_info(
                     f"Loaded network state: {self.state['network']['name']}")
+
+                # Load connections
+                self.connections = {
+                    conn['id']: conn for conn in self.state['network']['connections']}
+                log_info(f"Loaded {len(self.connections)} network connections")
+
                 return self.state
         except FileNotFoundError:
             log_error(f"Error: State file {self.state_file} not found")
@@ -67,11 +81,11 @@ class NetworkTopologyManager:
             sys.exit(1)
 
     def get_container_image_and_config(self, node_type: str) -> tuple[str, Dict[str, Any]]:
-        """Get appropriate Docker image and configuration based on node type"""
+        """Get Docker image and config for node type"""
         configs = {
             'firewall': {
                 'image': 'alpine:latest',
-                'command': 'sh -c "apk add --no-cache iptables && tail -f /dev/null"',
+                'command': 'sh -c "apk add --no-cache iptables traceroute && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
                 'ports': {}
@@ -85,23 +99,23 @@ class NetworkTopologyManager:
             },
             'router': {
                 'image': 'alpine:latest',
-                'command': 'sh -c "apk add --no-cache iproute2 iptables && echo 1 > /proc/sys/net/ipv4/ip_forward && tail -f /dev/null"',
+                'command': 'sh -c "apk add --no-cache iproute2 iptables traceroute && echo 1 > /proc/sys/net/ipv4/ip_forward && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
                 'ports': {}
             },
             'switch': {
                 'image': 'alpine:latest',
-                'command': 'sh -c "apk add --no-cache bridge-utils iproute2 && tail -f /dev/null"',
+                'command': 'sh -c "apk add --no-cache bridge-utils iptables iproute2 && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
                 'ports': {}
             },
             'user': {
                 'image': 'alpine:latest',
-                'command': 'sh -c "apk add --no-cache curl wget && tail -f /dev/null"',
+                'command': 'sh -c "apk add --no-cache iptables && tail -f /dev/null"',
                 'cap_add': [],
-                'privileged': False,
+                'privileged': True,  # TODO: Change to non-privileged
                 'ports': {}
             },
             'external': {
@@ -117,7 +131,7 @@ class NetworkTopologyManager:
         return config['image'], config
 
     def create_custom_network(self) -> Network:
-        """Create a custom Docker network for the topology"""
+        """Create custom Docker network"""
         try:
             # Remove existing network if it exists
             try:
@@ -200,7 +214,7 @@ class NetworkTopologyManager:
         return ip
 
     def create_container(self, node_data: Dict[str, Any], node_index: int) -> Container:
-        """Create a Docker container for a network node"""
+        """Create Docker container for network node"""
         node_id = node_data['id']
         node_type = node_data['type']
         node_name = node_data['name']
@@ -270,55 +284,23 @@ class NetworkTopologyManager:
             raise
 
     def configure_container_services(self, container: Container, node_data: Dict[str, Any]) -> None:
-        """Configure services within a container based on node type"""
+        """Configure services by node type"""
         node_type = node_data['type']
         node_id = node_data['id']
 
         try:
             if node_type == 'firewall':
                 log_info(f"Configuring firewall rules for {node_id}")
-                # Basic firewall configuration
-                commands = node_data['config'].get('rules', [])
-                for cmd in commands:
-                    success = False
-                    for attempt in range(3):
-                        result = container.exec_run(cmd, user="root")
-                        if result.exit_code == 0:
-                            success = True
-                            break
-                        else:
-                            log_warn(
-                                f"Attempt {attempt + 1} failed for {node_id}: {cmd} with code {result.exit_code}")
-                            if attempt < 2:
-                                time.sleep(3)
-
-                    if not success:
-                        log_error(
-                            f"Command failed after 3 attempts in {node_id}: {cmd}")
+                self.configure_firewall_rules(container, node_data)
 
             elif node_type == 'router':
                 log_info(f"Configuring routing for {node_id}")
-                commands = node_data['config'].get('rules', [])
-                for cmd in commands:
-                    success = False
-                    for attempt in range(3):
-                        result = container.exec_run(cmd, user="root")
-                        if result.exit_code == 0:
-                            success = True
-                            break
-                        else:
-                            log_warn(
-                                f"Attempt {attempt + 1} failed for {node_id}: {cmd} with code {result.exit_code}")
-                            if attempt < 2:
-                                time.sleep(3)
+                self.configure_router_rules(container, node_data)
 
-                    if not success:
-                        log_error(
-                            f"Command failed after 3 attempts in {node_id}: {cmd}")
-
-            elif node_type == 'server':
-                log_info(f"Server {node_id} is running nginx by default")
-                # Nginx should already be running from the image
+            elif node_type in ['user', 'switch']:
+                log_info(
+                    f"Configuring network rules for {node_type} {node_id}")
+                self.configure_host_rules(container, node_data)
 
         except Exception as e:
             log_error(f"Error configuring services for {node_id}: {e}")
@@ -530,7 +512,7 @@ class NetworkTopologyManager:
         return False
 
     def create_topology(self) -> None:
-        """Create the complete Docker-based network topology"""
+        """Create complete Docker network topology"""
         if not self.state:
             self.load_state()
 
@@ -550,12 +532,6 @@ class NetworkTopologyManager:
             try:
                 container = self.create_container(node_data, index)
                 self.containers[node_data['id']] = container
-
-                # Wait a moment for container to start
-                time.sleep(7)
-
-                # Configure services
-                self.configure_container_services(container, node_data)
 
             except Exception as e:
                 log_error(
@@ -673,7 +649,7 @@ class NetworkTopologyManager:
             log_error(f"Error during connectivity test: {e}")
 
     def list_containers(self) -> None:
-        """List all created containers with their details"""
+        """List all containers with their details"""
         log_info("*** Container Status ***")
 
         for node_id, container in self.containers.items():
@@ -682,18 +658,25 @@ class NetworkTopologyManager:
                 status = container.status
 
                 # Get IP address
-                ip_address = "N/A"
-                network_settings = container.attrs['NetworkSettings']
-                for network_name, network_info in network_settings['Networks'].items():
-                    if network_name == self.network_name:
-                        ip_address = network_info['IPAddress']
-                        break
+                ip_address = self.ip_assignments.get(node_id, "N/A")
 
                 log_info(
                     f"Container: {node_id} | Status: {status} | IP: {ip_address}")
 
             except Exception as e:
                 log_error(f"Error getting status for {node_id}: {e}")
+
+        # Display connection topology
+        log_info("\n*** Network Connection Topology ***")
+        for conn_id, conn_data in self.connections.items():
+            source_ip = self.ip_assignments.get(conn_data['source'], 'N/A')
+            target_ip = self.ip_assignments.get(conn_data['target'], 'N/A')
+            log_info(f"Connection: {conn_id}")
+            log_info(
+                f"  {conn_data['source']} ({source_ip}) -> {conn_data['target']} ({target_ip})")
+            log_info(
+                f"  Type: {conn_data['type']} | Status: {conn_data['status']} | Bandwidth: {conn_data.get('bandwidth', 'N/A')}")
+            log_info("")
 
     def cleanup(self) -> None:
         """Clean up containers and networks"""
@@ -719,7 +702,7 @@ class NetworkTopologyManager:
         log_info("Cleanup completed")
 
     def interactive_shell(self, container_id: str) -> None:
-        """Open an interactive shell in a specific container"""
+        """Open interactive shell in container"""
         if container_id not in self.containers:
             log_error(f"Container {container_id} not found")
             return
@@ -731,7 +714,7 @@ class NetworkTopologyManager:
 
 
 def main():
-    """Main function to run the network initialization"""
+    """Main function to run network initialization"""
     parser = argparse.ArgumentParser(
         description='Initialize Docker-based network topology from state file')
     parser.add_argument('--state-file',
@@ -765,25 +748,35 @@ def main():
 
         if args.test:
             network_manager.test_connectivity()
+            network_manager.validate_connections()
             return
 
         # Create the topology
         network_manager.create_topology()
 
         # Keep containers running
-        log_info("="*30)
-        log_info("Network topology is running!")
-        log_info("Use the following commands to interact with containers:")
-        log_info("")
+        log_info("="*50)
+        log_info("Network topology with connection-based security is running!")
+        log_info("="*50)
+        log_info("Container Access Commands:")
         for container_id in network_manager.containers.keys():
             log_info(f"  docker exec -it {container_id} sh")
         log_info("")
-        log_info("To clean up: python3 init_network.py --cleanup")
-        log_info("To test connectivity: python3 init_network.py --test")
-        log_info("="*30)
+        log_info("Network Information:")
+        log_info(f"  Total Containers: {len(network_manager.containers)}")
+        log_info(f"  Defined Connections: {len(network_manager.connections)}")
+        log_info(
+            f"  Network Segments: {len(network_manager.network_segments)}")
+        log_info("")
+        log_info("Available Commands:")
+        log_info("  python3 init_network.py --cleanup     # Clean up resources")
+        log_info("  python3 init_network.py --test        # Test connectivity")
+        log_info("  python3 init_network.py --list        # List containers")
+        log_info("="*50)
 
     except KeyboardInterrupt:
         log_error("\n*** Interrupted by user ***")
+        network_manager.cleanup()
     except Exception as e:
         log_error(f"*** Error: {e} ***")
         network_manager.cleanup()
