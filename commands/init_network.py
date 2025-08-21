@@ -575,8 +575,53 @@ class NetworkTopologyManager:
         log_info("*** Network topology created successfully ***")
         log_info(f"Network: {self.state['network']['name']}")
         log_info(f"Containers: {len(self.containers)}")
-        log_info(
-            f"Network connections will be simulated through container communication")
+        log_info(f"Connections: {len(self.connections)}")
+        log_info("Network traffic is controlled by connection definitions")
+
+    def validate_connections(self) -> None:
+        """Validate defined connections are allowed"""
+        log_info("Validating connection restrictions...")
+
+        # Test each defined connection
+        for conn_id, conn_data in self.connections.items():
+            if conn_data['status'] == 'active':
+                self.test_connection(conn_data)
+
+    def test_connection(self, conn_data: Dict[str, Any]) -> None:
+        """Test that a defined connection works"""
+        source_id = conn_data['source']
+        target_id = conn_data['target']
+
+        if source_id not in self.containers or target_id not in self.containers:
+            log_warn(
+                f"Cannot test connection {conn_data['id']}: containers not found")
+            return
+
+        source_container = self.containers[source_id]
+        target_ip = self.ip_assignments.get(target_id)
+
+        if not target_ip:
+            log_warn(
+                f"Cannot test connection {conn_data['id']}: target IP not found")
+            return
+
+        try:
+            # Install ping if not available
+            source_container.exec_run(
+                "apk add --no-cache iputils", detach=False)
+
+            # Test connectivity
+            result = source_container.exec_run(
+                f"ping -c 1 -W 3 {target_ip}", detach=False)
+            if result.exit_code == 0:
+                log_info(
+                    f"✓ Connection {conn_data['id']} ({source_id} -> {target_id}) working")
+            else:
+                log_error(
+                    f"✗ Connection {conn_data['id']} ({source_id} -> {target_id}) failed")
+
+        except Exception as e:
+            log_error(f"Error testing connection {conn_data['id']}: {e}")
 
     def test_connectivity(self) -> None:
         """Test basic connectivity between containers"""
