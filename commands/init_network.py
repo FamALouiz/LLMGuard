@@ -153,10 +153,51 @@ class NetworkTopologyManager:
             raise
 
     def assign_ip_address(self, node_id: str, node_index: int) -> str:
-        """Assign IP address based on node index"""
-        # Start from 172.20.0.10 to avoid conflicts with gateway
-        ip_host = 10 + node_index
-        return f"172.20.0.{ip_host}"
+        """Assign IP address by node type and segment"""
+        node_data = None
+        for node in self.state['network']['nodes']:
+            if node['id'] == node_id:
+                node_data = node
+                break
+
+        if not node_data:
+            raise ValueError(
+                f"Node not found: {node_id}"
+            )
+
+        node_type = node_data['type']
+
+        # Assign IPs based on network segments and node type
+        if node_type == 'external':
+            segment = self.network_segments['external']
+            base_ip = int(segment.split('.')[2])
+            ip_host = 10 + node_index
+            ip = f"172.20.{base_ip}.{ip_host}"
+        elif node_type == 'firewall':
+            # Firewall gets IP in management segment and acts as gateway
+            ip = "172.20.0.2"  # Main gateway
+        elif node_type == 'router':
+            # Router gets IP in management segment
+            ip = "172.20.0.3"
+        elif node_type == 'server':
+            # Servers in DMZ
+            segment = self.network_segments['dmz']
+            base_ip = int(segment.split('.')[2])
+            ip_host = 10 + (node_index % 240)
+            ip = f"172.20.{base_ip}.{ip_host}"
+        elif node_type in ['user', 'switch']:
+            # Users and switches in internal network
+            segment = self.network_segments['internal']
+            base_ip = int(segment.split('.')[2])
+            ip_host = 10 + (node_index % 240)
+            ip = f"172.20.{base_ip}.{ip_host}"
+        else:
+            # Default assignment
+            ip_host = 10 + node_index
+            ip = f"172.20.0.{ip_host}"
+
+        self.ip_assignments[node_id] = ip
+        return ip
 
     def create_container(self, node_data: Dict[str, Any], node_index: int) -> Container:
         """Create a Docker container for a network node"""
