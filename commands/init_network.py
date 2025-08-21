@@ -323,6 +323,212 @@ class NetworkTopologyManager:
         except Exception as e:
             log_error(f"Error configuring services for {node_id}: {e}")
 
+    def configure_firewall_rules(self, container: Container, node_data: Dict[str, Any]) -> None:
+        node_id = node_data['id']
+        router_ip = self.get_router_ip()
+
+        setup_commands = [
+            "iptables -F",
+            "iptables -X",
+            "iptables -t nat -F",
+            "iptables -t nat -X",
+            "iptables -P INPUT DROP",
+            "iptables -P OUTPUT DROP",
+            "iptables -P FORWARD DROP",
+            "echo 1 > /proc/sys/net/ipv4/ip_forward",
+            "iptables -A INPUT -i lo -j ACCEPT",
+            "iptables -A OUTPUT -o lo -j ACCEPT",
+            "iptables -A INPUT  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
+            "iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
+            "iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
+        ]
+
+        user_containers = []
+        for node in self.state['network']['nodes']:
+            if node['type'] == 'user':
+                user_containers.append(node['id'])
+
+        for source_user in user_containers:
+            source_ip = self.ip_assignments.get(source_user)
+            if source_ip:
+                for target_user in user_containers:
+                    if source_user != target_user:
+                        target_ip = self.ip_assignments.get(target_user)
+                        if target_ip:
+                            cmd = f"iptables -A FORWARD -s {source_ip} -d {target_ip} -j ACCEPT"
+                            setup_commands.append(cmd)
+
+        for cmd in setup_commands:
+            self.execute_command_with_retry(container, cmd, node_id)
+
+    def configure_host_rules(self, container: Container, node_data: Dict[str, Any]) -> None:
+        node_id = node_data['id']
+        router_ip = self.get_router_ip()
+        firewall_ip = self.get_firewall_ip()
+
+        setup_commands = [
+            "iptables -F",
+            "iptables -X",
+            "iptables -t nat -F",
+            "iptables -t nat -X",
+            "iptables -P INPUT DROP",
+            "iptables -P OUTPUT DROP",
+            "iptables -P FORWARD DROP",
+            "iptables -A INPUT -i lo -j ACCEPT",
+            "iptables -A OUTPUT -o lo -j ACCEPT",
+            "iptables -A INPUT  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
+            "iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
+            "iptables -A INPUT  -p icmp -j ACCEPT",
+            "iptables -A OUTPUT -p icmp -j ACCEPT",
+            f"iptables -A OUTPUT -d {router_ip} -j ACCEPT",
+            f"iptables -A INPUT -s {firewall_ip} -j ACCEPT",
+            "ip route del default",
+            f"ip route add default via {router_ip}",
+            f"ip route replace 172.20.3.0/24 via {router_ip}"
+        ]
+
+        for cmd in setup_commands:
+            self.execute_command_with_retry(container, cmd, node_id)
+
+    def configure_router_rules(self, container: Container, node_data: Dict[str, Any]) -> None:
+        node_id = node_data['id']
+        firewall_ip = self.get_firewall_ip()
+
+        setup_commands = [
+            "iptables -F",
+            "iptables -X",
+            "iptables -t nat -F",
+            "iptables -t nat -X",
+            "iptables -P INPUT DROP",
+            "iptables -P OUTPUT ACCEPT",
+            "iptables -P FORWARD DROP",
+            "echo 1 > /proc/sys/net/ipv4/ip_forward",
+            "iptables -A INPUT -i lo -j ACCEPT",
+            "iptables -A OUTPUT -o lo -j ACCEPT",
+            "iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
+            "iptables -A INPUT -p icmp -j ACCEPT",
+            "iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
+            "iptables -A FORWARD -s 172.20.3.0/24 -d 172.20.3.0/24 -p icmp -j ACCEPT",
+            "iptables -A FORWARD -s 172.20.3.0/24 -d 172.20.3.0/24 -j ACCEPT",
+            f"ip route replace 172.20.3.0/24 via {firewall_ip}"
+        ]
+
+        for cmd in setup_commands:
+            self.execute_command_with_retry(container, cmd, node_id)
+
+    def get_node_connections(self, node_id: str) -> list:
+        """Get all connections for a node"""
+        connections = []
+        for conn_id, conn_data in self.connections.items():
+            if conn_data['source'] == node_id or conn_data['target'] == node_id:
+                connections.append(conn_data)
+        return connections
+
+    def get_firewall_ip(self) -> str:
+        """Get firewall IP address"""
+        for node_id, ip in self.ip_assignments.items():
+            if node_id.startswith('fw-'):
+                return ip
+        return None
+
+    def get_router_ip(self) -> str:
+        """Get router IP address"""
+        for node_id, ip in self.ip_assignments.items():
+            if node_id.startswith('rt-'):
+                return ip
+        return None
+
+    def add_firewall_connection_rule(self, container: Container, conn_data: Dict[str, Any], node_id: str) -> None:
+        """Add firewall rules for allowed connections"""
+        source_ip = self.ip_assignments.get(conn_data['source'])
+        target_ip = self.ip_assignments.get(conn_data['target'])
+        log_info(
+            f"Creating firewall rule for connection {conn_data['id']}: {source_ip} <-> {target_ip}")
+        if not source_ip or not target_ip:
+            log_warn(
+                f"Cannot create rule for connection {conn_data['id']}: missing IP assignments")
+            return
+
+        # Allow traffic between connected nodes
+        if conn_data['source'] == node_id:
+            # Outgoing traffic
+            cmd = f"iptables -A OUTPUT -d {target_ip} -j ACCEPT"
+            self.execute_command_with_retry(container, cmd, node_id)
+            cmd = f"iptables -A FORWARD -s {source_ip} -d {target_ip} -j ACCEPT"
+            self.execute_command_with_retry(container, cmd, node_id)
+        elif conn_data['target'] == node_id:
+            # Incoming traffic
+            cmd = f"iptables -A INPUT -s {source_ip} -j ACCEPT"
+            self.execute_command_with_retry(container, cmd, node_id)
+            cmd = f"iptables -A FORWARD -s {source_ip} -d {target_ip} -j ACCEPT"
+            self.execute_command_with_retry(container, cmd, node_id)
+
+    def add_connection_rules(self) -> None:
+        """Add connection rules to all containers"""
+        log_info("Applying bidirectional connection rules...")
+        for conn_id, conn_data in self.connections.items():
+            if conn_data.get('status') == 'active':
+                source_id = conn_data['source']
+                target_id = conn_data['target']
+                source_ip = self.ip_assignments.get(source_id)
+                target_ip = self.ip_assignments.get(target_id)
+
+                if not source_ip or not target_ip:
+                    log_warn(
+                        f"Skipping connection {conn_id}: missing IP assignments")
+                    continue
+
+                log_info(
+                    f"Applying bidirectional rules for connection {conn_id}: {source_id} <-> {target_id}")
+
+                # Apply rules to source container
+                if source_id in self.containers:
+                    source_container = self.containers[source_id]
+                    # Allow outgoing to target
+                    cmd = f"iptables -I OUTPUT 1 -d {target_ip} -j ACCEPT"
+                    self.execute_command_with_retry(
+                        source_container, cmd, source_id)
+                    # Allow incoming from target
+                    cmd = f"iptables -I INPUT 1 -s {target_ip} -j ACCEPT"
+                    self.execute_command_with_retry(
+                        source_container, cmd, source_id)
+
+                # Apply rules to target container
+                if target_id in self.containers:
+                    target_container = self.containers[target_id]
+                    # Allow outgoing to source
+                    cmd = f"iptables -I OUTPUT 1 -d {source_ip} -j ACCEPT"
+                    self.execute_command_with_retry(
+                        target_container, cmd, target_id)
+                    # Allow incoming from source
+                    cmd = f"iptables -I INPUT 1 -s {source_ip} -j ACCEPT"
+                    self.execute_command_with_retry(
+                        target_container, cmd, target_id)
+
+    def execute_command_with_retry(self, container: Container, cmd: str, node_id: str, max_retries: int = 5) -> bool:
+        """Execute command with retry logic"""
+        for attempt in range(max_retries):
+            try:
+                result = container.exec_run(cmd, user="root", privileged=True)
+                if result.exit_code == 0:
+                    log_info(
+                        f"Successfully executed command in {node_id}: {cmd}")
+                    return True
+                else:
+                    log_warn(
+                        f"Attempt {attempt + 1} failed for {node_id}: {cmd} with code {result.exit_code}")
+                    if attempt < max_retries - 1:
+                        time.sleep(10)
+            except Exception as e:
+                log_warn(
+                    f"Exception on attempt {attempt + 1} for {node_id}: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(10)
+
+        log_error(
+            f"Command failed after {max_retries} attempts in {node_id}: {cmd}")
+        return False
+
     def create_topology(self) -> None:
         """Create the complete Docker-based network topology"""
         if not self.state:
