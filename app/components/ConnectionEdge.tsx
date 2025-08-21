@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
 import { EdgeProps, getBezierPath } from "@xyflow/react";
 import { motion } from "framer-motion";
+import React from "react";
 
 interface ConnectionEdgeData {
     type: "wan" | "lan" | "suspicious";

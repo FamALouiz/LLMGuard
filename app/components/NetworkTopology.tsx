@@ -1,35 +1,32 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
 import {
-    ReactFlow,
-    Node,
-    Edge,
-    addEdge,
-    useNodesState,
-    useEdgesState,
+    Background,
     Connection,
     ConnectionMode,
-    Background,
     Controls,
+    Edge,
     MiniMap,
+    Node,
     Panel,
+    ReactFlow,
+    addEdge,
+    useEdgesState,
+    useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { NetworkNode } from "./NetworkNode";
-import { ConnectionEdge } from "./ConnectionEdge";
 import { motion } from "framer-motion";
 import {
-    Shield,
     Activity,
     AlertTriangle,
-    Users,
-    Server,
-    Zap,
     Eye,
-    Settings,
-    PlusCircle,
+    Server,
+    Shield,
+    Zap,
 } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { ConnectionEdge } from "./ConnectionEdge";
+import { NetworkNode } from "./NetworkNode";
 
 interface NetworkState {
     network: {
@@ -69,7 +66,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     useEffect(() => {
         const loadNetworkState = async () => {
             try {
-                const response = await fetch("/state.json");
+                const response = await fetch("/simplified_state.json");
                 const data = await response.json();
                 setNetworkState(data);
 
@@ -120,6 +117,55 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
         [setEdges]
+    );
+
+    // Function to update node position in the backend
+    const updateNodePosition = useCallback(
+        async (nodeId: string, position: { x: number; y: number }) => {
+            try {
+                const response = await fetch("/api/update-node-position", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ nodeId, position }),
+                });
+
+                if (!response.ok) {
+                    console.error(
+                        "Failed to update node position:",
+                        await response.text()
+                    );
+                } else {
+                    console.log(
+                        `Node ${nodeId} position updated to (${position.x}, ${position.y})`
+                    );
+                }
+            } catch (error) {
+                console.error("Error updating node position:", error);
+            }
+        },
+        []
+    );
+
+    // Handle node position changes with debouncing
+    const onNodesChangeWithPositionUpdate = useCallback(
+        (changes: any[]) => {
+            onNodesChange(changes);
+
+            // Check for position changes and update backend
+            changes.forEach((change) => {
+                if (
+                    change.type === "position" &&
+                    change.position &&
+                    !change.dragging
+                ) {
+                    // Only update when dragging ends (not during drag)
+                    updateNodePosition(change.id, change.position);
+                }
+            });
+        },
+        [onNodesChange, updateNodePosition]
     );
 
     const onNodeClick = useCallback(
@@ -178,7 +224,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                onNodesChange={onNodesChange}
+                onNodesChange={onNodesChangeWithPositionUpdate}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onNodeClick={onNodeClick}
@@ -255,7 +301,7 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                 {/* Legend */}
                 <Panel
                     position="bottom-left"
-                    className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 m-4"
+                    className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 m-4 text-gray-600"
                 >
                     <h4 className="font-semibold text-gray-800 mb-2">Legend</h4>
                     <div className="space-y-2 text-sm">
@@ -355,7 +401,16 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                                                     {key.replace(/_/g, " ")}:
                                                 </span>
                                                 <span className="text-gray-700">
-                                                    {typeof value === "boolean"
+                                                    {Array.isArray(value)
+                                                        ? `${
+                                                              value.length
+                                                          } item${
+                                                              value.length === 1
+                                                                  ? ""
+                                                                  : "s"
+                                                          }`
+                                                        : typeof value ===
+                                                          "boolean"
                                                         ? value
                                                             ? "Yes"
                                                             : "No"

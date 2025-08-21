@@ -1,0 +1,121 @@
+{
+    "network": {
+        "name": "Simplified Demo Network",
+        "id": "net-demo",
+        "nodes": [
+            {
+                "id": "fw-001",
+                "type": "firewall",
+                "name": "Demo Firewall",
+                "status": "active",
+                "position": {
+                    "x": -506,
+                    "y": 70
+                },
+                "config": {
+                    "rules": [],
+                    "threats_blocked": 0,
+                    "traffic_volume": "150 MB/s"
+                }
+            },
+            {
+                "id": "rt-001",
+                "type": "router",
+                "name": "Core Router",
+                "status": "active",
+                "position": {
+                    "x": 106,
+                    "y": 40
+                },
+                "config": {
+                    "throughput": "500 MB/s",
+                    "rules": []
+                }
+            },
+            {
+                "id": "host-001",
+                "type": "user",
+                "name": "Host 1",
+                "status": "active",
+                "position": {
+                    "x": 542,
+                    "y": -271
+                },
+                "config": {
+                    "logged_in": true,
+                    "last_activity": "1 minute ago",
+                    "security_level": "medium"
+                }
+            },
+            {
+                "id": "host-002",
+                "type": "user",
+                "name": "Host 2",
+                "status": "active",
+                "position": {
+                    "x": 520,
+                    "y": 118
+                },
+                "config": {
+                    "logged_in": true,
+                    "last_activity": "3 minutes ago",
+                    "security_level": "medium"
+                }
+            },
+            {
+                "id": "host-003",
+                "type": "user",
+                "name": "Host 3",
+                "status": "active",
+                "position": {
+                    "x": 490,
+                    "y": 416
+                },
+                "config": {
+                    "logged_in": false,
+                    "last_activity": "10 minutes ago",
+                    "security_level": "low"
+                }
+            }
+        ],
+        "connections": [
+            {
+                "id": "conn-001",
+                "source": "fw-001",
+                "target": "rt-001",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "1 Gbps",
+                "latency": "1ms"
+            },
+            {
+                "id": "conn-002",
+                "source": "rt-001",
+                "target": "host-001",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "100 Mbps",
+                "latency": "2ms"
+            },
+            {
+                "id": "conn-003",
+                "source": "rt-001",
+                "target": "host-002",
+                "type": "active",
+                "bandwidth": "100 Mbps",
+                "latency": "2ms"
+            },
+            {
+                "id": "conn-004",
+                "source": "rt-001",
+                "target": "host-003",
+                "type": "lan",
+                "status": "active",
+                "bandwidth": "100 Mbps",
+                "latency": "3ms"
+            }
+        ],
+        "traffic_flows": [],
+        "security_events": []
+    }
+}
