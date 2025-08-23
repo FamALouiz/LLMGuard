@@ -8,27 +8,61 @@ const ollama = new Ollama({
 });
 
 // Define response schemas for structured output
-const CommandResponseSchema = z.object({
-    type: z.enum(["command", "explanation", "error"]),
-    content: z.string(),
-    commands: z
-        .array(
-            z.object({
-                action: z.string(),
-                target: z.string().optional(),
-                parameters: z.record(z.any()).optional(),
-                description: z.string(),
-            })
-        )
-        .optional(),
-    networkChanges: z
-        .object({
-            nodes: z.array(z.any()).optional(),
-            connections: z.array(z.any()).optional(),
-            rules: z.array(z.string()).optional(),
-        })
-        .optional(),
-});
+const CommandResponseSchema = {
+    type: "object",
+    properties: {
+        type: {
+            type: "string",
+            enum: ["command", "explanation", "error"],
+        },
+        content: {
+            type: "string",
+        },
+        commands: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    action: { type: "string" },
+                    target: { type: "string" },
+                    parameters: {
+                        type: "object",
+                        additionalProperties: true,
+                    },
+                    description: { type: "string" },
+                },
+                required: ["action", "description"],
+            },
+        },
+        networkChanges: {
+            type: "object",
+            properties: {
+                nodes: {
+                    type: "array",
+                    items: { type: "object" },
+                },
+                connections: {
+                    type: "array",
+                    items: { type: "object" },
+                },
+                rules: {
+                    type: "array",
+                    items: { type: "string" },
+                },
+            },
+        },
+    },
+    required: ["type", "content"],
+};
+
+const TextResponseSchema = {
+    type: "object",
+    properties: {
+        type: { type: "string", enum: ["text"] },
+        content: { type: "string" },
+    },
+    required: ["type", "content"],
+};
 
 export async function POST(request: NextRequest) {
     try {
@@ -125,20 +159,18 @@ Example response format:
   ]
 }`;
 
-            const response = await ollama.chat({
+            const response = await ollama.generate({
                 model: "qwen3:4b",
-                messages: [
-                    { role: "system", content: prompt },
-                    { role: "user", content: message },
-                ],
-                format: "json",
+                prompt: prompt,
+                system: message,
+                format: CommandResponseSchema,
                 options: {
                     temperature: 0.1,
                 },
             });
 
             try {
-                const parsedResponse = JSON.parse(response.message.content);
+                const parsedResponse = JSON.parse(response.response);
 
                 return NextResponse.json({
                     success: true,
@@ -151,7 +183,7 @@ Example response format:
                     success: true,
                     data: {
                         type: "explanation",
-                        content: response.message.content,
+                        content: response.response,
                     },
                     type: "text",
                 });
@@ -162,7 +194,9 @@ Example response format:
 
     Current network context: ${JSON.stringify(context)}
 
-Provide a helpful, detailed explanation about network security, firewall rules, or topology analysis. Be specific and technical when appropriate. Keep responses concise but informative.`;
+Provide a helpful, detailed explanation about network security, firewall rules, or topology analysis. Be specific and technical when appropriate. Keep responses concise but informative.
+Be friendly but still professional.
+`;
 
             const response = await ollama.chat({
                 model: "qwen3:4b",
@@ -173,14 +207,14 @@ Provide a helpful, detailed explanation about network security, firewall rules, 
                 options: {
                     temperature: 0.3,
                 },
-                format: "json",
+                format: TextResponseSchema,
             });
 
             return NextResponse.json({
                 success: true,
                 data: {
                     type: "explanation",
-                    content: response.message.content,
+                    content: JSON.parse(response.message.content).content,
                 },
                 type: "text",
             });

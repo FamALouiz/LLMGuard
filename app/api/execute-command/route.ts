@@ -90,8 +90,6 @@ export async function POST(request: NextRequest) {
                 }
 
                 if (dockerCommand) {
-                    console.log(`Executing: ${dockerCommand}`);
-
                     const { stdout, stderr } = await execAsync(dockerCommand);
                     results.push({
                         command: command.action,
