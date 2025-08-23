@@ -78,7 +78,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             const result = await response.json();
 
             if (result.success) {
-                console.log(result.data);
                 const assistantMessage: Message = {
                     id: (Date.now() + 1).toString(),
                     type: "assistant",

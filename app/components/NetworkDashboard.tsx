@@ -49,17 +49,13 @@ export const NetworkDashboard: React.FC<NetworkDashboardProps> = ({
 
     const handleNodeSelect = (node: any) => {
         setSelectedNode(node);
-        console.log("Selected node:", node);
     };
 
     const handleEdgeSelect = (edge: any) => {
         setSelectedEdge(edge);
-        console.log("Selected edge:", edge);
     };
 
-    const handleMessageSend = (message: string) => {
-        console.log("User message:", message);
-    };
+    const handleMessageSend = (message: string) => {};
 
     const toggleFullscreen = () => {
         setIsFullscreen(!isFullscreen);

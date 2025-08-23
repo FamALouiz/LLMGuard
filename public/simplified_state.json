@@ -70,8 +70,8 @@
                 "name": "Host 3",
                 "status": "active",
                 "position": {
-                    "x": 221,
-                    "y": 359
+                    "x": 163,
+                    "y": 361
                 },
                 "config": {
                     "logged_in": false,

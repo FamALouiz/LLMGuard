@@ -136,10 +136,6 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                         "Failed to update node position:",
                         await response.text()
                     );
-                } else {
-                    console.log(
-                        `Node ${nodeId} position updated to (${position.x}, ${position.y})`
-                    );
                 }
             } catch (error) {
                 console.error("Error updating node position:", error);
