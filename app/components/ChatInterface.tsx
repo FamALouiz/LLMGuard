@@ -1,34 +1,40 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, Loader2, Send, Trash2, User } from "lucide-react";
+import { Bot, Loader2, Play, Send, Terminal, Trash2, User } from "lucide-react";
 import React, { useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
     id: string;
     type: "user" | "assistant";
     content: string;
     timestamp: Date;
+    data?: any; // For structured responses
+    commandResults?: any[]; // For command execution results
 }
 
 interface ChatInterfaceProps {
     onMessageSend?: (message: string) => void;
+    networkContext?: any; // Current network state
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     onMessageSend,
+    networkContext,
 }) => {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "1",
             type: "assistant",
             content:
-                "Welcome to LLM Guard! I can help you analyze network security, explain firewall rules, and provide insights about your network topology. What would you like to know?",
+                "Welcome to LLM Guard! I'll be your personal assistant. What would you like to know?",
             timestamp: new Date(),
         },
     ]);
     const [inputValue, setInputValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isExecuting, setIsExecuting] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -50,29 +56,89 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         };
 
         setMessages((prev) => [...prev, userMessage]);
+        const currentInput = inputValue;
         setInputValue("");
         setIsLoading(true);
 
-        // Call the callback if provided
-        onMessageSend?.(inputValue);
+        onMessageSend?.(currentInput);
 
-        // Simulate LLM response (replace with actual LLM integration later)
-        setTimeout(() => {
-            const assistantMessage: Message = {
+        try {
+            // Send to LLM API
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    message: currentInput,
+                    context: networkContext,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log(result.data);
+                const assistantMessage: Message = {
+                    id: (Date.now() + 1).toString(),
+                    type: "assistant",
+                    content: result.data.content,
+                    timestamp: new Date(),
+                    data: result.data,
+                };
+
+                setMessages((prev) => [...prev, assistantMessage]);
+            } else {
+                throw new Error(result.error || "Failed to get response");
+            }
+        } catch (error: any) {
+            const errorMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 type: "assistant",
-                content: `I received your query: "${userMessage.content}". This is a simulated response. In the actual implementation, this would be processed by the LLM and provide real network security insights.`,
+                content: `Error: ${error.message}`,
                 timestamp: new Date(),
             };
-            setMessages((prev) => [...prev, assistantMessage]);
+            setMessages((prev) => [...prev, errorMessage]);
+        } finally {
             setIsLoading(false);
-        }, 1500);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
+        }
+    };
+
+    const executeCommands = async (messageId: string, commands: any[]) => {
+        setIsExecuting(true);
+
+        try {
+            const response = await fetch("/api/execute-command", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    commands: commands,
+                }),
+            });
+
+            const result = await response.json();
+
+            // Update the message with execution results
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === messageId
+                        ? { ...msg, commandResults: result.results }
+                        : msg
+                )
+            );
+        } catch (error) {
+            console.error("Command execution failed:", error);
+        } finally {
+            setIsExecuting(false);
         }
     };
 
@@ -86,6 +152,147 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 timestamp: new Date(),
             },
         ]);
+    };
+
+    const renderMessage = (message: Message) => {
+        const hasCommands =
+            message.data?.commands && message.data.commands.length > 0;
+
+        return (
+            <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className={`flex gap-3 ${
+                    message.type === "user" ? "justify-end" : "justify-start"
+                }`}
+            >
+                {message.type === "assistant" && (
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-4 h-4 text-blue-600" />
+                    </div>
+                )}
+
+                <div
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                        message.type === "user"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 text-gray-800"
+                    }`}
+                >
+                    <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+                        <ReactMarkdown>
+                            {message.content
+                                .replace(/<think>[\s\S]*?<\/think>/g, "")
+                                .trim()}
+                        </ReactMarkdown>
+                    </div>
+
+                    {/* Command display and execution */}
+                    {hasCommands && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded border">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-gray-600">
+                                    <Terminal className="w-3 h-3 inline mr-1" />
+                                    Commands Found
+                                </span>
+                                <button
+                                    onClick={() =>
+                                        executeCommands(
+                                            message.id,
+                                            message.data.commands
+                                        )
+                                    }
+                                    disabled={isExecuting}
+                                    className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
+                                >
+                                    <Play className="w-3 h-3" />
+                                    Execute
+                                </button>
+                            </div>
+
+                            {message.data.commands.map(
+                                (cmd: any, idx: number) => (
+                                    <div
+                                        key={idx}
+                                        className="text-xs mb-2 last:mb-0"
+                                    >
+                                        <div className="font-mono bg-black text-green-400 p-2 rounded">
+                                            <div className="text-white text-xs mb-1">
+                                                {cmd.description}
+                                            </div>
+                                            <div>
+                                                {cmd.action}
+                                                {cmd.target
+                                                    ? ` (${cmd.target})`
+                                                    : ""}
+                                            </div>
+                                            {cmd.parameters?.rule && (
+                                                <div className="text-yellow-300">
+                                                    {cmd.parameters.rule}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    )}
+
+                    {/* Command results display */}
+                    {message.commandResults && (
+                        <div className="mt-3 p-3 bg-green-50 rounded border">
+                            <span className="text-xs font-medium text-green-700 block mb-2">
+                                Execution Results:
+                            </span>
+                            {message.commandResults.map(
+                                (result: any, idx: number) => (
+                                    <div
+                                        key={idx}
+                                        className="text-xs mb-2 last:mb-0"
+                                    >
+                                        <div
+                                            className={`p-2 rounded ${
+                                                result.success
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-red-100 text-red-800"
+                                            }`}
+                                        >
+                                            <strong>{result.command}:</strong>{" "}
+                                            {result.success
+                                                ? "Success"
+                                                : "Failed"}
+                                            {result.output && (
+                                                <div className="mt-1 font-mono text-xs">
+                                                    {result.output}
+                                                </div>
+                                            )}
+                                            {result.error && (
+                                                <div className="mt-1 text-red-600 text-xs">
+                                                    {result.error}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    )}
+
+                    <span className="text-xs opacity-70 mt-1 block">
+                        {message.timestamp.toLocaleTimeString()}
+                    </span>
+                </div>
+
+                {message.type === "user" && (
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-gray-600" />
+                    </div>
+                )}
+            </motion.div>
+        );
     };
 
     return (
@@ -109,49 +316,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                <AnimatePresence>
-                    {messages.map((message) => (
-                        <motion.div
-                            key={message.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className={`flex gap-3 ${
-                                message.type === "user"
-                                    ? "justify-end"
-                                    : "justify-start"
-                            }`}
-                        >
-                            {message.type === "assistant" && (
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <Bot className="w-4 h-4 text-blue-600" />
-                                </div>
-                            )}
-
-                            <div
-                                className={`max-w-[80%] rounded-lg p-3 ${
-                                    message.type === "user"
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-100 text-gray-800"
-                                }`}
-                            >
-                                <p className="text-sm leading-relaxed">
-                                    {message.content}
-                                </p>
-                                <span className="text-xs opacity-70 mt-1 block">
-                                    {message.timestamp.toLocaleTimeString()}
-                                </span>
-                            </div>
-
-                            {message.type === "user" && (
-                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <User className="w-4 h-4 text-gray-600" />
-                                </div>
-                            )}
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
+                <AnimatePresence>{messages.map(renderMessage)}</AnimatePresence>
 
                 {/* Loading indicator */}
                 {isLoading && (
@@ -184,7 +349,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        placeholder="Ask about your network or firewall"
+                        placeholder="Prompt here!"
                         className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[40px] max-h-[120px] text-black"
                         rows={1}
                         disabled={isLoading}
@@ -198,13 +363,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     </button>
                 </div>
 
-                {/* Quick suggestions */}
+                {/* Updated suggestions for command-oriented prompts */}
                 <div className="mt-2 flex flex-wrap gap-2">
                     {[
-                        "Analyze current threats",
-                        "Show firewall rules",
-                        "Network performance",
-                        "Security recommendations",
+                        "Show me current iptables rules",
+                        "Analyze network security posture",
                     ].map((suggestion) => (
                         <button
                             key={suggestion}
