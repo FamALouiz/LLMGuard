@@ -11,7 +11,7 @@ import {
     Settings,
     Shield,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChatInterface } from "./ChatInterface";
 import { NetworkTopology } from "./NetworkTopology";
 
@@ -27,28 +27,42 @@ export const NetworkDashboard: React.FC<NetworkDashboardProps> = ({
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [showInsertComponent, setShowInsertComponent] = useState(false);
+    const [networkContext, setNetworkContext] = useState<any>(null);
+
+    useEffect(() => {
+        loadNetworkState();
+    }, []);
+
+    const loadNetworkState = async () => {
+        try {
+            const response = await fetch("/api/network-state");
+            const result = await response.json();
+            if (result.success) {
+                setNetworkContext(result.data);
+            } else {
+                console.error("Failed to load network state:", result.error);
+            }
+        } catch (error) {
+            console.error("Error loading network state:", error);
+        }
+    };
 
     const handleNodeSelect = (node: any) => {
         setSelectedNode(node);
-        console.log("Selected node:", node);
     };
 
     const handleEdgeSelect = (edge: any) => {
         setSelectedEdge(edge);
-        console.log("Selected edge:", edge);
     };
 
-    const handleMessageSend = (message: string) => {
-        console.log("User message:", message);
-        // TODO: Integrate with LLM service
-    };
+    const handleMessageSend = (message: string) => {};
 
     const toggleFullscreen = () => {
         setIsFullscreen(!isFullscreen);
     };
 
     const refreshNetwork = () => {
-        // TODO: Reload network state
+        loadNetworkState();
         window.location.reload();
     };
 
@@ -159,9 +173,12 @@ export const NetworkDashboard: React.FC<NetworkDashboardProps> = ({
                         initial={{ x: 300, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.4 }}
-                        className="w-96 flex-shrink-0"
+                        className="w-[500px] flex-shrink-0"
                     >
-                        <ChatInterface onMessageSend={handleMessageSend} />
+                        <ChatInterface
+                            onMessageSend={handleMessageSend}
+                            networkContext={networkContext}
+                        />
                     </motion.div>
                 )}
             </motion.div>

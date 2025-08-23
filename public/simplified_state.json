@@ -9,8 +9,8 @@
                 "name": "Demo Firewall",
                 "status": "active",
                 "position": {
-                    "x": -506,
-                    "y": 70
+                    "x": -535,
+                    "y": 25
                 },
                 "config": {
                     "rules": [],
@@ -24,8 +24,8 @@
                 "name": "Core Router",
                 "status": "active",
                 "position": {
-                    "x": 106,
-                    "y": 40
+                    "x": 121,
+                    "y": 17
                 },
                 "config": {
                     "throughput": "500 MB/s",
@@ -38,14 +38,15 @@
                 "name": "Host 1",
                 "status": "active",
                 "position": {
-                    "x": 542,
-                    "y": -271
+                    "x": 230,
+                    "y": -319
                 },
                 "config": {
                     "logged_in": true,
                     "last_activity": "1 minute ago",
                     "security_level": "medium"
-                }
+                },
+                "ip": "172.20.3.12"
             },
             {
                 "id": "host-002",
@@ -53,14 +54,15 @@
                 "name": "Host 2",
                 "status": "active",
                 "position": {
-                    "x": 520,
-                    "y": 118
+                    "x": 542,
+                    "y": 23
                 },
                 "config": {
                     "logged_in": true,
                     "last_activity": "3 minutes ago",
                     "security_level": "medium"
-                }
+                },
+                "ip": "172.20.3.13"
             },
             {
                 "id": "host-003",
@@ -68,14 +70,15 @@
                 "name": "Host 3",
                 "status": "active",
                 "position": {
-                    "x": 490,
-                    "y": 416
+                    "x": 163,
+                    "y": 361
                 },
                 "config": {
                     "logged_in": false,
                     "last_activity": "10 minutes ago",
                     "security_level": "low"
-                }
+                },
+                "ip": "172.20.3.14"
             }
         ],
         "connections": [
