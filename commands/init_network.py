@@ -113,7 +113,7 @@ class NetworkTopologyManager:
             },
             'user': {
                 'image': 'alpine:latest',
-                'command': 'sh -c "apk add --no-cache iptables && tail -f /dev/null"',
+                'command': 'sh -c "sleep 3 && apk add --no-cache iptables && tail -f /dev/null"',
                 'cap_add': [],
                 'privileged': True,  # TODO: Change to non-privileged
                 'ports': {}
