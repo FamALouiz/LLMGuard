@@ -3,6 +3,7 @@ import { Ollama } from "ollama";
 import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { commandKeywords } from "@/data/keywords";
 
 const execAsync = promisify(exec);
 
@@ -119,58 +120,6 @@ export async function POST(request: NextRequest) {
         const { message, context } = await request.json();
 
         // Determine if this is a command request or general query
-        const commandKeywords = [
-            "command",
-            "execute",
-            "run",
-            "apply",
-            "block",
-            "allow",
-            "rule",
-            "iptables",
-            "add",
-            "remove",
-            "delete",
-            "create",
-            "configure",
-            "set",
-            "enable",
-            "disable",
-            "drop",
-            "accept",
-            "reject",
-            "forward",
-            "input",
-            "output",
-            "chain",
-            "table",
-            "flush",
-            "policy",
-            "insert",
-            "append",
-            "firewall",
-            "route",
-            "redirect",
-            "nat",
-            "masquerade",
-            "port",
-            "protocol",
-            "tcp",
-            "udp",
-            "icmp",
-            "ssh",
-            "http",
-            "https",
-            "connect",
-            "disconnect",
-            "link",
-            "unlink",
-            "bridge",
-            "subnet",
-            "vlan",
-            "interface",
-        ];
-
         const isCommandRequest = commandKeywords.some((keyword) =>
             message.toLowerCase().includes(keyword)
         );
