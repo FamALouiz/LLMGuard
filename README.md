@@ -108,7 +108,7 @@ npm run dev
 ### 2. Initialize Network Topology
 
 ```bash
-python3 commands/init_network.py
+python3 commands/init_network.py --state-file ./public/simplified_state.json
 ```
 
 ### 3. Access the Application
