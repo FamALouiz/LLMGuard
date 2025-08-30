@@ -1,11 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Ollama } from "ollama";
 import { z } from "zod";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 // Initialize Ollama client
 const ollama = new Ollama({
     host: "http://localhost:11434",
 });
+
+// Function to get current iptables rules from firewall container
+async function getCurrentIptablesRules(context?: any): Promise<string> {
+    try {
+        // Try to find firewall node from context, fallback to default
+        let firewallNodeId = "fw-001";
+
+        if (context?.nodes) {
+            const firewallNode = context.nodes.find(
+                (node: any) =>
+                    node.type === "firewall" || node.id.startsWith("fw-")
+            );
+            if (firewallNode) {
+                firewallNodeId = firewallNode.id;
+            }
+        }
+
+        // Get all iptables rules with detailed information
+        const commands = [
+            `docker exec ${firewallNodeId} iptables -L -n -v --line-numbers`,
+            `docker exec ${firewallNodeId} iptables -t nat -L -n -v --line-numbers`,
+            `docker exec ${firewallNodeId} iptables -t mangle -L -n -v --line-numbers`,
+        ];
+
+        const results = [];
+
+        for (const command of commands) {
+            try {
+                const { stdout } = await execAsync(command);
+                results.push(stdout.trim());
+            } catch (error) {
+                console.warn(`Failed to execute: ${command}`, error);
+                results.push(
+                    `Failed to retrieve rules for ${
+                        command.split(" ")[4]
+                    } table`
+                );
+            }
+        }
+
+        return `FILTER TABLE:\n${results[0]}\n\nNAT TABLE:\n${results[1]}\n\nMANGLE TABLE:\n${results[2]}`;
+    } catch (error) {
+        console.error("Failed to get iptables rules:", error);
+        return "Failed to retrieve current iptables rules. Container may not be running or accessible.";
+    }
+}
 
 // Define response schemas for structured output
 const CommandResponseSchema = {
@@ -126,15 +176,27 @@ export async function POST(request: NextRequest) {
         );
 
         if (isCommandRequest) {
+            // Get current iptables rules before generating response
+            const currentIptablesRules = await getCurrentIptablesRules(context);
+
             // Generate structured response for commands
             const prompt = `You are an expert network security assistant for LLMGuard. 
 
 Current network context: ${JSON.stringify(context)}
 
+CURRENT IPTABLES RULES ON FIREWALL:
+${currentIptablesRules}
+
+IMPORTANT: Before adding any new iptables rules, you MUST:
+1. Check if any existing rules conflict with the new rule you want to add
+2. If there are conflicting rules, remove them first using the appropriate iptables -D command
+3. Then add the new rule
+4. Ensure rules don't overlap or create contradictions
+
 Analyze the request and provide a structured response with specific commands that can be executed on the network topology. Focus on iptables rules, network configuration, or topology changes.
 After generating the request, generate a quick summary of the changes being made.
 
-For iptables commands, provide the exact command syntax.
+For iptables commands, provide the exact command syntax. Make sure to ALWAYS include the target DEVICE.
 For network changes, specify node IDs and connection modifications.
 Always include a clear description of what each command does.
 
@@ -165,7 +227,7 @@ Example response format:
                 system: message,
                 format: CommandResponseSchema,
                 options: {
-                    temperature: 0.1,
+                    temperature: 0.05,
                 },
             });
 
