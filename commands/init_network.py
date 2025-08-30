@@ -115,7 +115,7 @@ class NetworkTopologyManager:
                 'image': 'alpine:latest',
                 'command': 'sh -c "sleep 3 && apk add --no-cache iptables && tail -f /dev/null"',
                 'cap_add': [],
-                'privileged': True,  # TODO: Change to non-privileged
+                'privileged': False,
                 'ports': {}
             },
             'external': {
