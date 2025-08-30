@@ -71,6 +71,17 @@ cd LLMGuard
 npm install
 ```
 
+#### (Optional but recommended) Create virtual environment
+
+```bash
+pip install virtualenv
+
+python3 -m venv .venv
+
+source .venv/bin/activate # for linux
+.venv\Scripts\activate # for windows
+```
+
 #### Python Dependencies
 
 ```bash

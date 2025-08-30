@@ -84,7 +84,7 @@ class NetworkTopologyManager:
         """Get Docker image and config for node type"""
         configs = {
             'firewall': {
-                'image': 'alpine:latest',
+                'image': 'alpine:3.19.8',
                 'command': 'sh -c "apk add --no-cache iptables traceroute && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
@@ -98,28 +98,28 @@ class NetworkTopologyManager:
                 'ports': {'80/tcp': None, '443/tcp': None}
             },
             'router': {
-                'image': 'alpine:latest',
+                'image': 'alpine:3.19.8',
                 'command': 'sh -c "apk add --no-cache iproute2 iptables traceroute && echo 1 > /proc/sys/net/ipv4/ip_forward && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
                 'ports': {}
             },
             'switch': {
-                'image': 'alpine:latest',
+                'image': 'alpine:3.19.8',
                 'command': 'sh -c "apk add --no-cache bridge-utils iptables iproute2 && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
                 'ports': {}
             },
             'user': {
-                'image': 'alpine:latest',
+                'image': 'alpine:3.19.8',
                 'command': 'sh -c "sleep 3 && apk add --no-cache iptables && tail -f /dev/null"',
                 'cap_add': [],
                 'privileged': True,  # TODO: Change to non-privileged
                 'ports': {}
             },
             'external': {
-                'image': 'alpine:latest',
+                'image': 'alpine:3.19.8',
                 'command': 'sh -c "apk add --no-cache iptables iproute2 && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
