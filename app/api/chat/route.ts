@@ -4,8 +4,11 @@ import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { commandKeywords } from "@/data/keywords";
+import { Message } from "@/app/components/ChatInterface";
 
 const execAsync = promisify(exec);
+const MESSAGE_CONTEXT_WINDOW = 4;
+let ctx: number[] | undefined;
 
 // Initialize Ollama client
 const ollama = new Ollama({
@@ -117,7 +120,7 @@ const TextResponseSchema = {
 
 export async function POST(request: NextRequest) {
     try {
-        const { message, context } = await request.json();
+        const { message, context, history } = await request.json();
 
         // Determine if this is a command request or general query
         const isCommandRequest = commandKeywords.some((keyword) =>
@@ -178,11 +181,12 @@ Example response format:
                 options: {
                     temperature: 0.05,
                 },
+                context: ctx,
             });
 
             try {
                 const parsedResponse = JSON.parse(response.response);
-
+                ctx = response.context;
                 return NextResponse.json({
                     success: true,
                     data: parsedResponse,
@@ -208,13 +212,19 @@ Example response format:
 Provide a helpful, detailed explanation about network security, firewall rules, or topology analysis. Be specific and technical when appropriate. Keep responses concise but informative.
 Be friendly but still professional.
 `;
-
+            const messagesToPass = [
+                { role: "system", content: prompt },
+                ...history
+                    .slice(-MESSAGE_CONTEXT_WINDOW)
+                    .map((msg: Message) => ({
+                        role: msg.type,
+                        content: msg.content,
+                    })),
+                { role: "user", content: message },
+            ];
             const response = await ollama.chat({
                 model: "qwen3:4b",
-                messages: [
-                    { role: "system", content: prompt },
-                    { role: "user", content: message },
-                ],
+                messages: messagesToPass,
                 options: {
                     temperature: 0.3,
                 },

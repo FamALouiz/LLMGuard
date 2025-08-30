@@ -5,7 +5,7 @@ import { Bot, Loader2, Play, Send, Terminal, Trash2, User } from "lucide-react";
 import React, { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
-interface Message {
+export interface Message {
     id: string;
     type: "user" | "assistant";
     content: string;
@@ -72,6 +72,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 body: JSON.stringify({
                     message: currentInput,
                     context: networkContext,
+                    history: messages,
                 }),
             });
 
