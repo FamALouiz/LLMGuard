@@ -71,6 +71,17 @@ cd LLMGuard
 npm install
 ```
 
+#### (Optional but recommended) Create virtual environment
+
+```bash
+pip install virtualenv
+
+python3 -m venv .venv
+
+source .venv/bin/activate # for linux
+.venv\Scripts\activate # for windows
+```
+
 #### Python Dependencies
 
 ```bash
@@ -108,7 +119,7 @@ npm run dev
 ### 2. Initialize Network Topology
 
 ```bash
-python3 commands/init_network.py
+python3 commands/init_network.py --state-file ./public/simplified_state.json
 ```
 
 ### 3. Access the Application
