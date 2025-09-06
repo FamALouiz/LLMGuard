@@ -76,7 +76,7 @@ npm install
 ```bash
 pip install virtualenv
 
-python3 -m venv .venv
+python3 -m venv .venv  # if python3 does not work try python
 
 source .venv/bin/activate # for linux
 .venv\Scripts\activate # for windows
