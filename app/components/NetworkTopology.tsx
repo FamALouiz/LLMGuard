@@ -27,6 +27,7 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { ConnectionEdge } from "./ConnectionEdge";
 import { NetworkNode } from "./NetworkNode";
+import { PingModal } from "./PingModal";
 
 interface NetworkState {
     network: {
@@ -61,6 +62,10 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
     const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
     const [selectedNode, setSelectedNode] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isPingModalOpen, setIsPingModalOpen] = useState(false);
+    const [pingAnimations, setPingAnimations] = useState<{
+        [key: string]: boolean;
+    }>({});
 
     // Load network state from JSON file
     useEffect(() => {
@@ -185,6 +190,88 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
         [networkState, onEdgeSelect]
     );
 
+    // Handle ping execution
+    const handlePingExecuted = useCallback(
+        (sourceId: string, targetId: string, result: any) => {
+            if (result.success) {
+                // Create animation key for this ping
+                const animationKey = `${sourceId}-${targetId}`;
+                setPingAnimations((prev) => ({
+                    ...prev,
+                    [animationKey]: true,
+                }));
+
+                // Remove animation after 2 seconds
+                setTimeout(() => {
+                    setPingAnimations((prev) => ({
+                        ...prev,
+                        [animationKey]: false,
+                    }));
+                }, 2000);
+
+                // Update edge status if it exists
+                setEdges((prevEdges) =>
+                    prevEdges.map((edge) => {
+                        if (
+                            (edge.source === sourceId &&
+                                edge.target === targetId) ||
+                            (edge.source === targetId &&
+                                edge.target === sourceId)
+                        ) {
+                            return {
+                                ...edge,
+                                animated: true,
+                                style: {
+                                    ...edge.style,
+                                    stroke: "#10b981",
+                                    strokeWidth: 3,
+                                },
+                            };
+                        }
+                        return edge;
+                    })
+                );
+
+                // Reset edge animation after delay
+                setTimeout(() => {
+                    setEdges((prevEdges) =>
+                        prevEdges.map((edge) => {
+                            if (
+                                (edge.source === sourceId &&
+                                    edge.target === targetId) ||
+                                (edge.source === targetId &&
+                                    edge.target === sourceId)
+                            ) {
+                                return {
+                                    ...edge,
+                                    animated: false,
+                                    style: {
+                                        ...edge.style,
+                                        stroke: "#6b7280",
+                                        strokeWidth: 2,
+                                    },
+                                };
+                            }
+                            return edge;
+                        })
+                    );
+                }, 2000);
+            }
+        },
+        [setEdges]
+    );
+
+    const openPingModal = useCallback((node?: any) => {
+        if (node) {
+            setSelectedNode(node);
+        }
+        setIsPingModalOpen(true);
+    }, []);
+
+    const closePingModal = useCallback(() => {
+        setIsPingModalOpen(false);
+    }, []);
+
     // Calculate network statistics
     const stats = networkState
         ? {
@@ -292,6 +379,17 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                             </div>
                         </div>
                     )}
+
+                    {/* Connectivity Test Button */}
+                    <div className="mt-4 pt-3 border-t border-gray-200">
+                        <button
+                            onClick={() => openPingModal()}
+                            className="w-full bg-blue-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Zap className="w-4 h-4" />
+                            Test Connectivity
+                        </button>
+                    </div>
                 </Panel>
 
                 {/* Legend */}
@@ -416,11 +514,35 @@ export const NetworkTopology: React.FC<NetworkTopologyProps> = ({
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Ping Button */}
+                                {selectedNode.status === "active" && (
+                                    <div className="pt-3 border-t border-gray-200">
+                                        <button
+                                            onClick={() =>
+                                                openPingModal(selectedNode)
+                                            }
+                                            className="w-full bg-blue-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <Zap className="w-4 h-4" />
+                                            Test Connectivity
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </Panel>
                 )}
             </ReactFlow>
+
+            {/* Ping Modal */}
+            <PingModal
+                isOpen={isPingModalOpen}
+                onClose={closePingModal}
+                sourceNode={selectedNode}
+                nodes={networkState?.network.nodes || []}
+                onPingExecuted={handlePingExecuted}
+            />
         </div>
     );
 };
