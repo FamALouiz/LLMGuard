@@ -16,7 +16,8 @@
                     "rules": [],
                     "threats_blocked": 0,
                     "traffic_volume": "150 MB/s"
-                }
+                },
+                "ip": "172.20.3.10"
             },
             {
                 "id": "rt-001",
@@ -30,7 +31,8 @@
                 "config": {
                     "throughput": "500 MB/s",
                     "rules": []
-                }
+                },
+                "ip": "172.20.3.11"
             },
             {
                 "id": "host-001",
