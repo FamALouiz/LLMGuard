@@ -330,15 +330,15 @@ class NetworkTopologyManager:
             if node['type'] == 'user':
                 user_containers.append(node['id'])
 
-        for source_user in user_containers:
-            source_ip = self.ip_assignments.get(source_user)
-            if source_ip:
-                for target_user in user_containers:
-                    if source_user != target_user:
-                        target_ip = self.ip_assignments.get(target_user)
-                        if target_ip:
-                            cmd = f"iptables -A FORWARD -s {source_ip} -d {target_ip} -j ACCEPT"
-                            setup_commands.append(cmd)
+        # for source_user in user_containers:
+        #     source_ip = self.ip_assignments.get(source_user)
+        #     if source_ip:
+        #         for target_user in user_containers:
+        #             if source_user != target_user:
+        #                 target_ip = self.ip_assignments.get(target_user)
+        #                 if target_ip:
+        #                     cmd = f"iptables -A FORWARD -s {source_ip} -d {target_ip} -j ACCEPT"
+        #                     setup_commands.append(cmd)
 
         for cmd in setup_commands:
             self.execute_command_with_retry(container, cmd, node_id)
