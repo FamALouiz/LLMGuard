@@ -10,10 +10,13 @@ import {
     RefreshCw,
     Settings,
     Shield,
+    Network,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ChatInterface } from "./ChatInterface";
 import { NetworkTopology } from "./NetworkTopology";
+import { CompactConnectivityMatrix } from "./CompactConnectivityMatrix";
+import Link from "next/link";
 
 interface NetworkDashboardProps {
     className?: string;
@@ -100,6 +103,19 @@ export const NetworkDashboard: React.FC<NetworkDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {/* Connectivity Matrix Button */}
+                        <Link href="/connectivity">
+                            <button
+                                className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Connectivity Matrix"
+                            >
+                                <Network className="w-5 h-5" />
+                                <span className="text-sm font-medium">
+                                    Matrix
+                                </span>
+                            </button>
+                        </Link>
+
                         {/* Insert Component Button */}
                         <button
                             onClick={() => {
