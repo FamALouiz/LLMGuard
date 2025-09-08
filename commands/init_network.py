@@ -38,13 +38,13 @@ class NetworkTopologyManager:
         self.networks = {}  # Maps network names to Docker networks
         self.state = None
         self.network_name = "llmguard_network"
-        self.base_ip = "172.20.0.0/16"
+        self.base_ip = "10.0.0.0/16"
         self.connections = {}  # Maps connection IDs to connection data
         self.network_segments = {
-            'external': '172.20.1.0/24',
-            'dmz': '172.20.2.0/24',
-            'internal': '172.20.3.0/24',
-            'management': '172.20.4.0/24'
+            'external': '10.0.1.0/24',
+            'dmz': '10.0.2.0/24',
+            'internal': '10.0.3.0/24',
+            'management': '10.0.4.0/24'
         }
         self.ip_assignments = {}  # Maps node IDs to assigned IPs
 
@@ -151,7 +151,7 @@ class NetworkTopologyManager:
                     pool_configs=[
                         docker.types.IPAMPool(
                             subnet=self.base_ip,
-                            gateway="172.20.0.1"
+                            gateway="10.0.0.1"
                         )
                     ]
                 ),
@@ -186,29 +186,29 @@ class NetworkTopologyManager:
             segment = self.network_segments['external']
             base_ip = int(segment.split('.')[2])
             ip_host = 10 + node_index
-            ip = f"172.20.{base_ip}.{ip_host}"
+            ip = f"10.0.{base_ip}.{ip_host}"
         elif node_type == 'firewall':
             # Firewall gets IP in management segment and acts as gateway
-            ip = "172.20.0.2"  # Main gateway
+            ip = "10.0.0.2"  # Main gateway
         elif node_type == 'router':
             # Router gets IP in management segment
-            ip = "172.20.0.3"
+            ip = "10.0.0.3"
         elif node_type == 'server':
             # Servers in DMZ
             segment = self.network_segments['dmz']
             base_ip = int(segment.split('.')[2])
             ip_host = 10 + (node_index % 240)
-            ip = f"172.20.{base_ip}.{ip_host}"
+            ip = f"10.0.{base_ip}.{ip_host}"
         elif node_type in ['user', 'switch']:
             # Users and switches in internal network
             segment = self.network_segments['internal']
             base_ip = int(segment.split('.')[2])
             ip_host = 10 + (node_index % 240)
-            ip = f"172.20.{base_ip}.{ip_host}"
+            ip = f"10.0.{base_ip}.{ip_host}"
         else:
             # Default assignment
             ip_host = 10 + node_index
-            ip = f"172.20.0.{ip_host}"
+            ip = f"10.0.0.{ip_host}"
 
         self.ip_assignments[node_id] = ip
         return ip
@@ -366,7 +366,7 @@ class NetworkTopologyManager:
             f"iptables -A INPUT -s {firewall_ip} -j ACCEPT",
             "ip route del default",
             f"ip route add default via {router_ip}",
-            f"ip route replace 172.20.3.0/24 via {router_ip}"
+            f"ip route replace 10.0.3.0/24 via {router_ip}"
         ]
 
         for cmd in setup_commands:
@@ -390,9 +390,9 @@ class NetworkTopologyManager:
             "iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
             "iptables -A INPUT -p icmp -j ACCEPT",
             "iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT",
-            "iptables -A FORWARD -s 172.20.3.0/24 -d 172.20.3.0/24 -p icmp -j ACCEPT",
-            "iptables -A FORWARD -s 172.20.3.0/24 -d 172.20.3.0/24 -j ACCEPT",
-            f"ip route replace 172.20.3.0/24 via {firewall_ip}"
+            "iptables -A FORWARD -s 10.0.3.0/24 -d 10.0.3.0/24 -p icmp -j ACCEPT",
+            "iptables -A FORWARD -s 10.0.3.0/24 -d 10.0.3.0/24 -j ACCEPT",
+            f"ip route replace 10.0.3.0/24 via {firewall_ip}"
         ]
 
         for cmd in setup_commands:
