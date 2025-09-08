@@ -85,7 +85,7 @@ class NetworkTopologyManager:
         configs = {
             'firewall': {
                 'image': 'alpine:3.19.8',
-                'command': 'sh -c "apk add --no-cache iptables traceroute && tail -f /dev/null"',
+                'command': 'sh -c "sleep 3 && apk add --no-cache iptables traceroute && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
                 'ports': {}
@@ -99,7 +99,7 @@ class NetworkTopologyManager:
             },
             'router': {
                 'image': 'alpine:3.19.8',
-                'command': 'sh -c "apk add --no-cache iproute2 iptables traceroute && echo 1 > /proc/sys/net/ipv4/ip_forward && tail -f /dev/null"',
+                'command': 'sh -c "sleep 3 && apk add --no-cache iproute2 iptables traceroute && echo 1 > /proc/sys/net/ipv4/ip_forward && tail -f /dev/null"',
                 'cap_add': ['NET_ADMIN'],
                 'privileged': True,
                 'ports': {}
