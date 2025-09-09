@@ -463,10 +463,10 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
                         <button
                             onClick={() => setAutoRefresh(!autoRefresh)}
                             className={`p-1 rounded transition-colors ${
-                                autoRefresh ? "text-green-600" : "text-red-400"
+                                !autoRefresh ? "text-green-600" : "text-red-400"
                             }`}
                         >
-                            {autoRefresh ? (
+                            {!autoRefresh ? (
                                 <Play className="w-4 h-4" />
                             ) : (
                                 <Pause className="w-4 h-4" />
@@ -478,7 +478,7 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
                                 setRefreshInterval(Number(e.target.value))
                             }
                             className={`border border-gray-300 rounded px-2 py-1 text-sm ${
-                                autoRefresh ? "text-green-600" : "text-red-400"
+                                !autoRefresh ? "text-green-600" : "text-red-400"
                             }`}
                             disabled={!autoRefresh}
                         >
