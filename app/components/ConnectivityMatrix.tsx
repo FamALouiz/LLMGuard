@@ -290,7 +290,7 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
     };
 
     const getConnectivityStatus = (sourceId: string, targetId: string) => {
-        if (sourceId === targetId) return "self";
+        if (sourceId === targetId) return "connected";
 
         const key = `${sourceId}-${targetId}`;
         const result = connectivityResults.get(key);
@@ -681,9 +681,6 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
                                                                           ? ` (${result.error})`
                                                                           : ""
                                                                   }`
-                                                                : status ===
-                                                                  "self"
-                                                                ? "Same device"
                                                                 : "Not tested"
                                                         }
                                                     >
