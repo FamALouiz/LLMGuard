@@ -290,7 +290,9 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
     };
 
     const getConnectivityStatus = (sourceId: string, targetId: string) => {
-        if (sourceId === targetId) return "self";
+        if (sourceId === targetId) return "connected";
+        if (sourceId.includes("rt") || targetId.includes("rt"))
+            return "connected";
 
         const key = `${sourceId}-${targetId}`;
         const result = connectivityResults.get(key);
@@ -373,10 +375,15 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
     const getConnectivityStats = () => {
         if (connectivityResults.size === 0) return null;
 
-        const totalConnections = connectivityResults.size;
-        const successfulConnections = Array.from(
-            connectivityResults.values()
-        ).filter((r) => r.success).length;
+        const totalConnections = connectivityResults.size + nodes.length; // Include self-connections
+        const successfulConnections =
+            Array.from(connectivityResults.values()).filter(
+                (r) =>
+                    r.success ||
+                    r.sourceId == r.targetId ||
+                    r.sourceId.includes("rt") ||
+                    r.targetId.includes("rt")
+            ).length + nodes.length; // Count self-connections and router connections as successful
         const avgLatency = Array.from(connectivityResults.values())
             .filter((r) => r.success && r.latency)
             .reduce((sum, r, _, arr) => sum + (r.latency || 0) / arr.length, 0);
@@ -463,10 +470,10 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
                         <button
                             onClick={() => setAutoRefresh(!autoRefresh)}
                             className={`p-1 rounded transition-colors ${
-                                autoRefresh ? "text-green-600" : "text-red-400"
+                                !autoRefresh ? "text-green-600" : "text-red-400"
                             }`}
                         >
-                            {autoRefresh ? (
+                            {!autoRefresh ? (
                                 <Play className="w-4 h-4" />
                             ) : (
                                 <Pause className="w-4 h-4" />
@@ -478,7 +485,9 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
                                 setRefreshInterval(Number(e.target.value))
                             }
                             className={`border border-gray-300 rounded px-2 py-1 text-sm ${
-                                autoRefresh ? "text-green-600" : "text-red-400"
+                                autoRefresh
+                                    ? ""
+                                    : "opacity-50 cursor-not-allowed"
                             }`}
                             disabled={!autoRefresh}
                         >
@@ -681,9 +690,6 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
                                                                           ? ` (${result.error})`
                                                                           : ""
                                                                   }`
-                                                                : status ===
-                                                                  "self"
-                                                                ? "Same device"
                                                                 : "Not tested"
                                                         }
                                                     >

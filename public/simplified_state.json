@@ -17,7 +17,7 @@
                     "threats_blocked": 0,
                     "traffic_volume": "150 MB/s"
                 },
-                "ip": "172.20.3.10"
+                "ip": "10.0.0.20"
             },
             {
                 "id": "rt-001",
@@ -32,7 +32,7 @@
                     "throughput": "500 MB/s",
                     "rules": []
                 },
-                "ip": "172.20.3.11"
+                "ip": "10.0.0.30"
             },
             {
                 "id": "host-001",
@@ -48,7 +48,7 @@
                     "last_activity": "1 minute ago",
                     "security_level": "medium"
                 },
-                "ip": "172.20.3.12"
+                "ip": "10.0.3.1"
             },
             {
                 "id": "host-002",
@@ -64,7 +64,7 @@
                     "last_activity": "3 minutes ago",
                     "security_level": "medium"
                 },
-                "ip": "172.20.3.13"
+                "ip": "10.0.3.2"
             },
             {
                 "id": "host-003",
@@ -80,7 +80,7 @@
                     "last_activity": "10 minutes ago",
                     "security_level": "low"
                 },
-                "ip": "172.20.3.14"
+                "ip": "10.0.3.3"
             }
         ],
         "connections": [
