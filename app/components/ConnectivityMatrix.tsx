@@ -478,7 +478,9 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
                                 setRefreshInterval(Number(e.target.value))
                             }
                             className={`border border-gray-300 rounded px-2 py-1 text-sm ${
-                                !autoRefresh ? "text-green-600" : "text-red-400"
+                                autoRefresh
+                                    ? ""
+                                    : "opacity-50 cursor-not-allowed"
                             }`}
                             disabled={!autoRefresh}
                         >
