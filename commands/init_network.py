@@ -185,14 +185,14 @@ class NetworkTopologyManager:
         if node_type == 'external':
             segment = self.network_segments['external']
             base_ip = int(segment.split('.')[2])
-            ip_host = 10 + node_index
+            ip_host = 0 + node_index
             ip = f"10.0.{base_ip}.{ip_host}"
         elif node_type == 'firewall':
             # Firewall gets IP in management segment and acts as gateway
-            ip = "10.0.0.2"  # Main gateway
+            ip = "10.0.0.20"  # Main gateway
         elif node_type == 'router':
             # Router gets IP in management segment
-            ip = "10.0.0.3"
+            ip = "10.0.0.30"
         elif node_type == 'server':
             # Servers in DMZ
             segment = self.network_segments['dmz']
@@ -203,11 +203,11 @@ class NetworkTopologyManager:
             # Users and switches in internal network
             segment = self.network_segments['internal']
             base_ip = int(segment.split('.')[2])
-            ip_host = 10 + (node_index % 240)
+            ip_host = 0 + (node_index % 240) - 1
             ip = f"10.0.{base_ip}.{ip_host}"
         else:
             # Default assignment
-            ip_host = 10 + node_index
+            ip_host = 0 + node_index
             ip = f"10.0.0.{ip_host}"
 
         self.ip_assignments[node_id] = ip
