@@ -6,15 +6,13 @@
             {
                 "id": "fw-001",
                 "type": "firewall",
-                "name": "Demo Firewall",
+                "name": "Firewall",
                 "status": "active",
                 "position": {
                     "x": -535,
                     "y": 25
                 },
                 "config": {
-                    "rules": [],
-                    "threats_blocked": 0,
                     "traffic_volume": "150 MB/s"
                 },
                 "ip": "10.0.0.20"
@@ -22,64 +20,51 @@
             {
                 "id": "rt-001",
                 "type": "router",
-                "name": "Core Router",
+                "name": "Router",
                 "status": "active",
                 "position": {
                     "x": 121,
                     "y": 17
                 },
                 "config": {
-                    "throughput": "500 MB/s",
-                    "rules": []
+                    "throughput": "500 MB/s"
                 },
                 "ip": "10.0.0.30"
             },
             {
                 "id": "host-001",
                 "type": "user",
-                "name": "Host 1",
+                "name": "Server Berlin",
                 "status": "active",
                 "position": {
                     "x": 230,
                     "y": -319
                 },
-                "config": {
-                    "logged_in": true,
-                    "last_activity": "1 minute ago",
-                    "security_level": "medium"
-                },
+                "config": {},
                 "ip": "10.0.3.1"
             },
             {
                 "id": "host-002",
                 "type": "user",
-                "name": "Host 2",
+                "name": "Server Hamburg",
                 "status": "active",
                 "position": {
                     "x": 542,
                     "y": 23
                 },
-                "config": {
-                    "logged_in": true,
-                    "last_activity": "3 minutes ago",
-                    "security_level": "medium"
-                },
+                "config": {},
                 "ip": "10.0.3.2"
             },
             {
                 "id": "host-003",
                 "type": "user",
-                "name": "Host 3",
+                "name": "Server Frankfurt",
                 "status": "active",
                 "position": {
                     "x": 163,
                     "y": 361
                 },
-                "config": {
-                    "logged_in": false,
-                    "last_activity": "10 minutes ago",
-                    "security_level": "low"
-                },
+                "config": {},
                 "ip": "10.0.3.3"
             }
         ],
@@ -106,7 +91,8 @@
                 "id": "conn-003",
                 "source": "rt-001",
                 "target": "host-002",
-                "type": "active",
+                "type": "lan",
+                "status": "active",
                 "bandwidth": "100 Mbps",
                 "latency": "2ms"
             },
