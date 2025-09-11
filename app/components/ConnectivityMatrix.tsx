@@ -291,6 +291,8 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
 
     const getConnectivityStatus = (sourceId: string, targetId: string) => {
         if (sourceId === targetId) return "connected";
+        if (sourceId.includes("rt") || targetId.includes("rt"))
+            return "connected";
 
         const key = `${sourceId}-${targetId}`;
         const result = connectivityResults.get(key);
@@ -373,10 +375,15 @@ export const ConnectivityMatrix: React.FC<ConnectivityMatrixProps> = ({
     const getConnectivityStats = () => {
         if (connectivityResults.size === 0) return null;
 
-        const totalConnections = connectivityResults.size;
-        const successfulConnections = Array.from(
-            connectivityResults.values()
-        ).filter((r) => r.success).length;
+        const totalConnections = connectivityResults.size + nodes.length; // Include self-connections
+        const successfulConnections =
+            Array.from(connectivityResults.values()).filter(
+                (r) =>
+                    r.success ||
+                    r.sourceId == r.targetId ||
+                    r.sourceId.includes("rt") ||
+                    r.targetId.includes("rt")
+            ).length + nodes.length; // Count self-connections and router connections as successful
         const avgLatency = Array.from(connectivityResults.values())
             .filter((r) => r.success && r.latency)
             .reduce((sum, r, _, arr) => sum + (r.latency || 0) / arr.length, 0);
